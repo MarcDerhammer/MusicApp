@@ -148,7 +148,7 @@ var createStation = function(thingId, type){
 
 var downloadSong = function(storeId){
     return new Promise(function(resolve, reject){
-        var fileName = '/usr/share/nginx/html/audio/' + storeId + ".mp3";
+        var fileName = 'music/' + storeId + ".mp3";
         var file = fs.createWriteStream(fileName);
         getStreamUrl(storeId).then(function(stream){
             if(!stream){

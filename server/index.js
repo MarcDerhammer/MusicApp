@@ -18,7 +18,32 @@ const getArtist = get('/artist/:id', async ctx => {
     return 'No results';
 });
 
+const getAlbum = get('/album/:id', async ctx => {
+    var album = await pm.artistLookup(ctx.params.id);
+    if(album)
+        return album;
+    return 'No results';
+});
+
+const getStreamUrl = get('/stream/:id', async ctx => {
+    var stream = await pm.artistLookup(ctx.params.id);
+    if(stream)
+        return stream;
+    return 'No results';
+});
+
+const downloadStream = get('/downloadStream/:id', async ctx => {
+    var id = await pm.downloadSong(ctx.params.id);
+    if(id)return id;
+    return 'No results';
+});
+
 server(
   getSearch,
-  getArtist
+  getArtist,
+  getAlbum,
+  getStreamUrl,
+  downloadStream
+
+
 );
