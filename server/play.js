@@ -20,7 +20,7 @@ var search = function(searchTerm){
         pm.init(creds, function(err) {
         if(err) console.error(err);
 
-            pm.search(searchTerm, 100, function(err, data){
+            pm.search(searchTerm, 25, function(err, data){
                 if(err){
                     resolve(null);
                     console.log(err)

@@ -7,9 +7,9 @@
       <v-spacer></v-spacer>
     </v-toolbar>
     <v-content>
-      <router-view></router-view>
+      <router-view style="margin-bottom: 50px"></router-view>
     </v-content>
-    <v-bottom-nav style="overflow: hidden" fixed :value="true" :active.sync="e1" color="transparent">
+    <v-bottom-nav style="overflow: hidden" fixed :value="true" :active.sync="e1" color="blue grey darken-4">
       <v-btn flat color="blue" value="Queue" href="#/">
         <span>Queue</span>
         <v-icon>queue_music</v-icon>
