@@ -13,6 +13,8 @@
                     <div>{{nowPlaying.artist}}</div>
                     <div>{{nowPlaying.album}} ({{nowPlaying.year}})</div>
                     <div v-if="nowPlaying.user" style="opacity: .6">Queued by {{nowPlaying.user}}</div>
+                    <!--<v-btn v-if="!listening" @click="joinAudio()">Join Audio <v-icon>volume_up</v-icon></v-btn>
+                    <v-btn v-if="listening" @click="leaveAudio()">Leave Audio <v-icon>volume_off</v-icon></v-btn>-->
                   </div>
                 </v-flex>
                 <v-flex xs7>
@@ -23,7 +25,9 @@
                     ></v-card-media>
                 </v-flex>
               </v-layout>
+              
             </v-container>
+            
             <v-progress-linear v-model="songProg"></v-progress-linear>
           </v-card>
         </v-flex>
@@ -43,7 +47,16 @@
         </v-list>
       </v-layout>
     </v-slide-y-transition>
+    <v-snackbar
+      :timeout="snackTimeout"
+      top
+      v-model="snackbar"
+    >
+      {{ snackText }}
+      <v-btn flat color="pink" @click.native="snackbar = false">Close</v-btn>
+    </v-snackbar>
   </v-container>
+  
 </template>
 
 <script>
@@ -51,7 +64,10 @@
   export default {
     data () {
       return {
-        songProg: 0
+        songProg: 0,
+        snackTimeout: 2500,
+        snackbar: false,
+        snackText: ''
       }
     },
     computed: {
@@ -60,14 +76,24 @@
       },
       nowPlaying(){
         return store.state.songQueue[0]
+      },
+      listening(){
+        return store.state.listening;
       }
     },
     methods: {
-
+      joinAudio(){
+        store.commit('JOINAUDIO', true);
+        this.$socket.emit('joinAudio', 'hey');
+      },
+      leaveAudio(){
+        store.commit('LEAVEAUDIO')
+        this.$socket.emit('leaveAudio', 'hey');
+      }
     },
     sockets: {
       songProg: function(data){
-        this.songProg = data;
+        this.songProg = data.percentage;
       }
     },
     watch: {

@@ -1,7 +1,9 @@
 // Include the server in your file
 const server = require('server');
+
 var pm = require('./play');
-const { get, post } = server.router;
+const { get, post, socket } = server.router;
+const { render } = server.reply;
 
 // Handle requests to the url "/" ( http://localhost:3000/ )
 const getSearch = get('/search/:search', async ctx => {
@@ -44,6 +46,4 @@ server(
   getAlbum,
   getStreamUrl,
   downloadStream
-
-
 );

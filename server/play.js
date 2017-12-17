@@ -146,9 +146,15 @@ var createStation = function(thingId, type){
     });
 }
 
+function randomInt(min, max){
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
 var downloadSong = function(storeId){
     return new Promise(function(resolve, reject){
-        var fileName = 'music/' + storeId + ".mp3";
+        var fileName = 'music/' + storeId + /*randomInt(0, 1000)*/ + ".mp3";
         var file = fs.createWriteStream(fileName);
         getStreamUrl(storeId).then(function(stream){
             if(!stream){
@@ -158,6 +164,7 @@ var downloadSong = function(storeId){
             var request = https.get(stream, function(response){
                 response.pipe(file);
                 file.on('finish', function(){
+                    fs.rename(fileName, 'music/' + storeId + '.mp3');
                     resolve(storeId);
                 });
             });

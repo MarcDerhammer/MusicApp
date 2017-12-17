@@ -32,7 +32,6 @@ new Vue({
   },
   methods:{
     pingServer(){
-      console.log('pingas')
     }
   }
   

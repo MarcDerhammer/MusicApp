@@ -1,7 +1,10 @@
 <template>
   <v-container>
-    <h2 v-if="searchResults.tracks && searchResults.tracks.length > 0" style="margin-bottom: 5px">Songs</h2>
-    <v-layout v-cloak aria-rowindex="" style="overflow-y:hidden; white-space: nowrap">
+    <v-layout align-center justify-center>
+      <v-progress-circular class="text-md-center" align-center v-if="searching" indeterminate v-bind:size="75" color="primary"></v-progress-circular>
+    </v-layout>
+    <h2 v-if="!searching && searchResults.tracks && searchResults.tracks.length > 0" style="margin-bottom: 5px">Songs</h2>
+    <v-layout v-if="!searching" v-cloak aria-rowindex="" style="overflow-y:hidden; white-space: nowrap">
       <div v-on:click="selectSong(i)" v-for="i in searchResults.tracks" style="margin-right: 15px; width: 120px; height: 158px; text-overflow: ellipsis; cursor:pointer">
         <v-avatar size="115px" :tile="true"  class="grey lighten-4">
           <img :src="i.albumArtRef[0].url"/>
@@ -9,54 +12,148 @@
         <br>
         <h4 style="overflow:hidden; text-overflow: ellipsis">{{i.title}}</h4>
         <h5 style="overflow:hidden; text-overflow: ellipsis">{{i.artist}}</h5>
-        </div>
       </div>
     </v-layout>
     <!-- Artists -->
-    <h2 v-if="searchResults.artists && searchResults.artists.length > 0" style="margin-bottom: 5px; margin-top: 15px;">Artists</h2>
-    <v-layout v-cloak aria-rowindex="" style="overflow-y:hidden; white-space: nowrap">
-      <div  v-for="i in searchResults.artists" style="margin-right: 15px; width: 120px; height: 158px; text-overflow: ellipsis; cursor:pointer">
+    <h2 v-if="!searching && searchResults.artists && searchResults.artists.length > 0" style="margin-bottom: 5px; margin-top: 15px;">Artists</h2>
+    <v-layout v-if="!searching" v-cloak aria-rowindex="" style="overflow-y:hidden; white-space: nowrap">
+      <div @click="artistLookup(i.artistId)" v-for="i in searchResults.artists" style="margin-right: 15px; width: 120px; height: 158px; text-overflow: ellipsis; cursor:pointer">
         <v-avatar size="115px" :tile="false"  class="grey lighten-4">
           <img style="object-fit: cover" :src="i.artistArtRef"/>
         </v-avatar>
         <br>
         <h4 style="overflow:hidden; text-overflow: ellipsis">{{i.name}}</h4>
-        </div>
       </div>
     </v-layout>
-    <v-dialog v-model="dialog2" max-width="500px">
-      <v-flex xs12>
-        <v-card v-if="selectedSong && selectedSong.albumArtRef"  class="white--text">
-          <v-container fluid grid-list-lg>
-            <v-layout row>
-              <v-flex>
-                <div>
-                  <div class="headline">{{selectedSong.title}}</div>
-                  <h3>{{selectedSong.artist}}</h3>
-                  <h4>{{selectedSong.album}} ({{selectedSong.year}})</h4>
-                  <h4>{{selectedSong.minSec}}</h4>
-                </div>
-              </v-flex>
-              <v-flex xs7>
-                  <v-card-media
-                    :src="selectedSong.albumArtRef[0].url"
-                    height="175px"
-                    contain
-                  ></v-card-media>
-              </v-flex>
-            </v-layout>
-          </v-container>
-          <v-container>
-            <v-card-actions>
-              <v-btn color="primary" @click.stop="addToQueue()">Add to Queue<v-icon>queue_music</v-icon></v-btn>
-              <v-btn @click.stop="dialog2=false">Close</v-btn>
-            </v-card-actions>
-          </v-container>
-        </v-card>
-      </v-flex>
-    </v-card>
-    </v-dialog>
+  <v-dialog v-model="dialog2" max-width="500px">
+    <v-flex xs12>
+      <v-card v-if="selectedSong && selectedSong.albumArtRef"  class="white--text">
+        <v-container fluid grid-list-lg>
+          <v-layout row>
+            <v-flex>
+              <div>
+                <div class="headline">{{selectedSong.title}}</div>
+                <h3>{{selectedSong.artist}}</h3>
+                <h4>{{selectedSong.album}} ({{selectedSong.year}})</h4>
+                <h4>{{selectedSong.minSec}}</h4>
+              </div>
+            </v-flex>
+            <v-flex xs7>
+                <v-card-media
+                  :src="selectedSong.albumArtRef[0].url"
+                  height="175px"
+                  contain
+                ></v-card-media>
+            </v-flex>
+          </v-layout>
+        </v-container>
+        <v-container>
+          <v-card-actions>
+            <v-btn color="primary" @click.stop="addToQueue()">Add to Queue<v-icon>queue_music</v-icon></v-btn>
+            <v-btn @click.stop="dialog2=false">Close</v-btn>
+          </v-card-actions>
+        </v-container>
+      </v-card>
+    </v-flex>
+  </v-dialog>
 
+<v-dialog v-model="artistDialog" max-width="500px">
+  <v-flex xs12>
+    <v-card v-if="artistResult && artistResult.artistArtRef"  class="white--text">
+      <v-container fluid grid-list-lg>
+        <v-layout column>
+          <v-flex xs12>
+              <v-card-media
+                :src="artistResult.artistArtRef"
+                height="175px"
+                contain
+              ></v-card-media>
+          </v-flex>
+          <v-layout align-center justify-center>
+            <div>
+              <div class="headline">{{artistResult.name}}</div>
+            </div>
+          </v-layout>
+          <h3 v-if="artistResult.topTracks && artistResult.topTracks.length > 0" style="margin-bottom: 5px">Top Songs</h3>
+          <v-layout v-if="!searching" v-cloak aria-rowindex="" style="overflow-y:hidden; white-space: nowrap">
+            <div v-on:click="selectSong(i)" v-for="i in artistResult.topTracks" style="margin-left: 7px; margin-right: 7px; width: 120px; height: 158px; text-overflow: ellipsis; cursor:pointer">
+              <v-avatar size="100px" :tile="true"  class="grey lighten-4">
+                <img :src="i.albumArtRef[0].url"/>
+              </v-avatar>
+              <br>
+              <h5 style="overflow:hidden; text-overflow: ellipsis">{{i.title}}</h5>
+            </div>
+          </v-layout>
+
+          <h3 v-if="artistResult.albums && artistResult.albums.length > 0" style="margin-bottom: 5px">Albums</h3>
+          <v-layout v-if="!searching" v-cloak aria-rowindex="" style="overflow-y:hidden; white-space: nowrap">
+            <div v-on:click="albumLookup(i.albumId)" v-for="i in artistResult.albums" style="margin-left: 7px; margin-right: 7px; width: 120px; height: 158px; text-overflow: ellipsis; cursor:pointer">
+              <v-avatar size="100px" :tile="true"  class="grey lighten-4">
+                <img :src="i.albumArtRef"/>
+              </v-avatar>
+              <br>
+              <h5 style="overflow:hidden; text-overflow: ellipsis">{{i.name}}</h5>
+              <h6 style="overflow:hidden; text-overflow: ellipsis">{{i.year}}</h6>
+            </div>
+          </v-layout>
+
+          <h3 v-if="artistResult.related_artists && artistResult.related_artists.length > 0" style="margin-bottom: 5px; margin-top: 15px;">Similar Artists</h3>
+          <v-layout v-if="!searching" v-cloak aria-rowindex="" style="overflow-y:hidden; white-space: nowrap">
+            <div @click="artistLookup(i.artistId)" v-for="i in artistResult.related_artists" style="margin-right: 15px; width: 120px; height: 158px; text-overflow: ellipsis; cursor:pointer">
+              <v-avatar size="100px" :tile="false"  class="grey lighten-4">
+                <img style="object-fit: cover" :src="i.artistArtRef"/>
+              </v-avatar>
+              <br>
+              <v-layout align-center justify-center>
+                <h5 style="overflow:hidden; text-overflow: ellipsis">{{i.name}}</h5>
+              </v-layout>
+            </div>
+          </v-layout>
+        </v-layout>
+      </v-container>
+      <v-container>
+        <v-card-actions>
+          <v-btn @click.stop="artistDialog=false">Close</v-btn>
+        </v-card-actions>
+      </v-container>
+    </v-card>
+  </v-flex>
+</v-dialog>
+
+<v-dialog v-model="albumDialog" max-width="500px">
+  <v-flex xs12>
+    <v-card v-if="albumResult && albumResult.albumArtRef"  class="white--text">
+      <v-container fluid grid-list-lg>
+        <v-layout column>
+          <v-flex xs12>
+              <v-card-media
+                :src="albumResult.albumArtRef"
+                height="175px"
+                contain
+              ></v-card-media>
+          </v-flex>
+          <v-layout align-center justify-center>
+              <div class="headline">{{albumResult.name}}</div>
+          </v-layout>
+          <v-layout align-center justify-center>
+              <div>{{albumResult.year}}</div>
+          </v-layout>
+          <h3 v-if="albumResult.tracks && albumResult.tracks.length > 0" style="margin-bottom: 5px">Tracks</h3>
+          <v-layout column v-cloak aria-rowindex="" style="overflow-y:hidden; white-space: nowrap">
+            <div v-on:click="selectSong(i)" v-for="i in albumResult.tracks">
+              
+            </div>
+          </v-layout>
+        </v-layout>
+      </v-container>
+      <v-container>
+        <v-card-actions>
+          <v-btn @click.stop="albumDialog=false">Close</v-btn>
+        </v-card-actions>
+      </v-container>
+    </v-card>
+  </v-flex>
+</v-dialog>
 
 <v-dialog v-model="dialog3" max-width="500px">
       <v-flex xs12>
@@ -109,8 +206,6 @@
           }
           
           return {
-          
-          searchQueryIsDirty: false,
           searching: false,
           selectedSong: {},
           dialog2: false,
@@ -119,7 +214,11 @@
           snackbar: false,
           snackText: '',
           snackTimeout: 2500,
-          alertMessage: ''
+          alertMessage: '',
+          artistDialog: false,
+          artistResult: {},
+          albumResult: {},
+          albumDialog: false
 
         }},
         computed: {
@@ -133,7 +232,6 @@
         watch: {
           searchTerm: function(searchTerm){
             this.searching=true;
-            this.searchQueryIsDirty = true;
             this.search(searchTerm)
           }
         },
@@ -146,28 +244,65 @@
             this.snackText = data;
             this.snackbar = true;
           },
-          queueSuccess: function(){
+          queueSuccess: function(id){
             this.dialog2 = false;
+            axios.get('https://marcderhammer.com/api/downloadStream/' + id).then(response => {
+              console.log('song downloaded to server');
+              this.$socket.emit('songReadyToPlay', id);
+            }).catch(e=>{
+              console.log(e);
+            });
           }
         },
         methods: {
           search: debounce(function(search){
             if(search)
-              axios.get(`/api/search/` + search).then(response => {
+              axios.get('https://marcderhammer.com/api/search/' + search).then(response => {
                 this.searchResults = response.data;
                 this.updateSearch(response.data);
+                this.searching = false;
               }).catch(e=>{
                 this.searching = false;
-                this.searchResults = {"tracks":[{"kind":"sj#track","title":"Good Day","artist":"Jukebox the Ghost","composer":"","album":"Let Live & Let Ghosts","albumArtist":"Jukebox the Ghost","year":2008,"trackNumber":1,"genre":"Alternative/Indie","durationMillis":"254000","albumArtRef":[{"url":"http://lh4.ggpht.com/U8yShtFT1x9bGNlv7Q-o_uyt2B4oiN2ocT02SRHTJHowYnUchUeIdSGMDBWyIVZ63D41YTer2A"}],"discNumber":1,"estimatedSize":"10174198","trackType":"7","storeId":"Tg5gftj7bivfr2si7hirccyyjei","albumId":"tlkasgqjc2vnijmx4cxg5hwuye","artistId":["vx7olm2277qbfxrbrkkamewirm"],"nid":"g5gftj7bivfr2si7hirccyyjei","trackAvailableForSubscription":true,"trackAvailableForPurchase":true,"albumAvailableForPurchase":true,"contentType":"2"},{"kind":"sj#track","title":"Good Day (Live)","artist":"Jukebox the Ghost","composer":"","album":"Long Way Home: Live","albumArtist":"Jukebox the Ghost","year":2016,"trackNumber":1,"genre":"Rock","durationMillis":"296000","albumArtRef":[{"url":"http://lh3.googleusercontent.com/ePElfr9MSPvDUlhyMyKHpesZg1I6UQUcjKKteI9SIHxvrVwxvreTtM3V_f1QYfFcnG1i1VT0wxQ"}],"discNumber":1,"estimatedSize":"11880516","trackType":"7","storeId":"Tspubm7z6uxbahu4iplmkgtfejm","albumId":"f7gh3b3k4zeiysrbcm65vyh6u4","artistId":["fdkpqiyxzvdhv3egmuke3f3kvi"],"nid":"spubm7z6uxbahu4iplmkgtfejm","trackAvailableForSubscription":true,"trackAvailableForPurchase":true,"albumAvailableForPurchase":true,"contentType":"2"},{"kind":"sj#track","title":"Somebody","artist":"Jukebox The Ghost","composer":"","album":"College Radio Day: The Album, Vol. 2","albumArtist":"Various Artists","year":2013,"trackNumber":19,"genre":"Rock","durationMillis":"223000","albumArtRef":[{"url":"http://lh5.ggpht.com/7eN3FEv6uZelw_1UTNscjhsOhG36P4lfhzjmilGISaY2tyJYlU3Ry3Pwcj4gjCM2SbDKPYYrtZs"}],"discNumber":1,"estimatedSize":"8928680","trackType":"7","storeId":"Tzlouc3bnvzvnssi225whbz7lpe","albumId":"7ke3bsomhwdyz3laze6sx4xr6e","artistId":["vx7olm2277qbfxrbrkkamewirm"],"nid":"zlouc3bnvzvnssi225whbz7lpe","trackAvailableForSubscription":true,"trackAvailableForPurchase":true,"albumAvailableForPurchase":true,"contentType":"2"},{"kind":"sj#track","title":"Good Day","artist":"Jukebox the Ghost & Jenny Owen Youngs","composer":"","album":"Jukebox the Ghost & Jenny Owen Youngs","albumArtist":"Jukebox the Ghost & Jenny Owen Youngs","year":2013,"trackNumber":2,"genre":"Rock","durationMillis":"244000","albumArtRef":[{"url":"http://lh5.ggpht.com/5unzhTeLvUErFCK0G0DJC5OJ7ST_XtnS_8b3Huqj7mu4EwV7w8IPzBk-pfk-JDTAqxYJh89t"}],"discNumber":1,"estimatedSize":"9772957","trackType":"7","storeId":"Tzv5i6ve4wouehh735t6y7575me","albumId":"pn5zo6s3szatpqp6zvte3mapym","artistId":["pstp3lian3cq2dm6gx5vmnjb6y"],"nid":"zv5i6ve4wouehh735t6y7575me","trackAvailableForSubscription":true,"trackAvailableForPurchase":true,"albumAvailableForPurchase":true,"contentType":"2"}],"artists":[{"kind":"sj#artist","name":"Jukebox The Ghost","artistArtRef":"http://lh3.googleusercontent.com/BqUqp2RwcHxusrOsdZFaNwdebi4gFjqaJV7mobqOGAORM37G70DLarslOLXNLt662fzJj4SS","artistId":"Avx7olm2277qbfxrbrkkamewirm","artist_bio_attribution":{"kind":"sj#attribution","source_title":"Wikipedia","source_url":"https://en.wikipedia.org/wiki/Jukebox_the_Ghost","license_title":"Creative Commons Attribution CC-BY-SA 4.0","license_url":"http://creativecommons.org/licenses/by-sa/4.0/legalcode"}}],"albums":[{"kind":"sj#album","name":"Let Live & Let Ghosts","albumArtist":"Jukebox the Ghost","albumArtRef":"http://lh4.ggpht.com/U8yShtFT1x9bGNlv7Q-o_uyt2B4oiN2ocT02SRHTJHowYnUchUeIdSGMDBWyIVZ63D41YTer2A","albumId":"Btlkasgqjc2vnijmx4cxg5hwuye","artist":"Jukebox the Ghost","artistId":["Avx7olm2277qbfxrbrkkamewirm"],"year":2008}],"playlists":[],"radios":[{"kind":"sj#radioStation","name":"Let Live & Let Ghosts","seed":{"kind":"sj#radioSeed","albumId":"Btlkasgqjc2vnijmx4cxg5hwuye","seedType":"4"},"imageUrls":[{"url":"http://lh4.ggpht.com/U8yShtFT1x9bGNlv7Q-o_uyt2B4oiN2ocT02SRHTJHowYnUchUeIdSGMDBWyIVZ63D41YTer2A"}]},{"kind":"sj#radioStation","name":"Jukebox The Ghost","seed":{"kind":"sj#radioSeed","artistId":"Avx7olm2277qbfxrbrkkamewirm","seedType":"3"},"imageUrls":[{"url":"http://lh3.googleusercontent.com/BqUqp2RwcHxusrOsdZFaNwdebi4gFjqaJV7mobqOGAORM37G70DLarslOLXNLt662fzJj4SS"}]},{"kind":"sj#radioStation","name":"Good Day","seed":{"kind":"sj#radioSeed","trackId":"Tg5gftj7bivfr2si7hirccyyjei","seedType":"2"},"imageUrls":[{"url":"http://lh4.ggpht.com/U8yShtFT1x9bGNlv7Q-o_uyt2B4oiN2ocT02SRHTJHowYnUchUeIdSGMDBWyIVZ63D41YTer2A"}]},{"kind":"sj#radioStation","name":"Good Day (Live)","seed":{"kind":"sj#radioSeed","trackId":"Tspubm7z6uxbahu4iplmkgtfejm","seedType":"2"},"imageUrls":[{"url":"http://lh3.googleusercontent.com/ePElfr9MSPvDUlhyMyKHpesZg1I6UQUcjKKteI9SIHxvrVwxvreTtM3V_f1QYfFcnG1i1VT0wxQ"}]},{"kind":"sj#radioStation","name":"Somebody","seed":{"kind":"sj#radioSeed","trackId":"Tzlouc3bnvzvnssi225whbz7lpe","seedType":"2"},"imageUrls":[{"url":"http://lh5.ggpht.com/7eN3FEv6uZelw_1UTNscjhsOhG36P4lfhzjmilGISaY2tyJYlU3Ry3Pwcj4gjCM2SbDKPYYrtZs"}]}]}
+                this.searchResults = {}
                 this.updateSearch(this.searchResults);
               });
               this.searching = false; 
           }, 350),
-          selectSong: function(s){
-            var d = new Date(1000*Math.round(s.durationMillis/1000));
+          artistLookup: function(id){
+            this.searching = true;
+            axios.get('https://marcderhammer.com/api/artist/' + id).then(response => {
+              this.artistResult = response.data;
+              this.searching = false;
+              console.log(this.artistResult);
+              this.artistDialog = true;
+            }).catch(e=>{
+              this.searching = false;
+              console.log(e);
+            });
+          },
+          albumLookup: function(id){
+            this.searching = true;
+            axios.get('https://marcderhammer.com/api/album/' + id).then(response => {
+              response.data.tracks.forEach(element => {
+                element.normTime = this.millisToNorm(element.durationMillis);
+              });
+              this.albumResult = response.data;
+              this.searching = false;
+              console.log(this.albumResult);
+              this.albumDialog = true;
+            }).catch(e=>{
+              this.searching = false;
+              console.log(e);
+            });
+          },
+          millisToNorm: function(dur){
+            var d = new Date(1000*Math.round(dur/1000));
             var mins = d.getUTCMinutes();
             var secs = d.getUTCSeconds();
-            s.minSec = mins + ":" + (secs < 10 ? "0" : "") + secs;
+            return mins + ":" + (secs < 10 ? "0" : "") + secs;
+          },
+          selectSong: function(s){
+            s.minSec = this.millisToNorm(s.durationMillis);
             this.selectedSong = s;
             this.dialog2 = true;
           },
@@ -182,6 +317,7 @@
             }
             this.$socket.emit('addSongToQueue', song);
             this.dialog3 = false;
+            
           }
         }
       }
