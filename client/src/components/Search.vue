@@ -25,6 +25,17 @@
         <h4 style="overflow:hidden; text-overflow: ellipsis">{{i.name}}</h4>
       </div>
     </v-layout>
+
+    <h2 v-if="!searching && searchResults.albums && searchResults.albums.length > 0" style="margin-bottom: 5px; margin-top: 15px;">Albums</h2>
+    <v-layout v-if="!searching" v-cloak aria-rowindex="" style="overflow-y:hidden; white-space: nowrap">
+      <div @click="albumLookup(i.albumId)" v-for="i in searchResults.albums" style="margin-right: 15px; width: 120px; height: 158px; text-overflow: ellipsis; cursor:pointer">
+        <v-avatar size="115px" :tile="false"  class="grey lighten-4">
+          <img style="object-fit: cover" :src="i.albumArtRef"/>
+        </v-avatar>
+        <br>
+        <h4 style="overflow:hidden; text-overflow: ellipsis">{{i.name}}</h4>
+      </div>
+    </v-layout>
   <v-dialog v-model="dialog2" max-width="500px">
     <v-flex xs12>
       <v-card v-if="selectedSong && selectedSong.albumArtRef"  class="white--text">
@@ -75,7 +86,7 @@
             </div>
           </v-layout>
           <h3 v-if="artistResult.topTracks && artistResult.topTracks.length > 0" style="margin-bottom: 5px">Top Songs</h3>
-          <v-layout v-if="!searching" v-cloak aria-rowindex="" style="overflow-y:hidden; white-space: nowrap">
+          <v-layout v-cloak aria-rowindex="" style="overflow-y:hidden; white-space: nowrap">
             <div v-on:click="selectSong(i)" v-for="i in artistResult.topTracks" style="margin-left: 7px; margin-right: 7px; width: 120px; height: 158px; text-overflow: ellipsis; cursor:pointer">
               <v-avatar size="100px" :tile="true"  class="grey lighten-4">
                 <img :src="i.albumArtRef[0].url"/>
@@ -86,7 +97,7 @@
           </v-layout>
 
           <h3 v-if="artistResult.albums && artistResult.albums.length > 0" style="margin-bottom: 5px">Albums</h3>
-          <v-layout v-if="!searching" v-cloak aria-rowindex="" style="overflow-y:hidden; white-space: nowrap">
+          <v-layout v-cloak aria-rowindex="" style="overflow-y:hidden; white-space: nowrap">
             <div v-on:click="albumLookup(i.albumId)" v-for="i in artistResult.albums" style="margin-left: 7px; margin-right: 7px; width: 120px; height: 158px; text-overflow: ellipsis; cursor:pointer">
               <v-avatar size="100px" :tile="true"  class="grey lighten-4">
                 <img :src="i.albumArtRef"/>
@@ -98,7 +109,7 @@
           </v-layout>
 
           <h3 v-if="artistResult.related_artists && artistResult.related_artists.length > 0" style="margin-bottom: 5px; margin-top: 15px;">Similar Artists</h3>
-          <v-layout v-if="!searching" v-cloak aria-rowindex="" style="overflow-y:hidden; white-space: nowrap">
+          <v-layout v-cloak aria-rowindex="" style="overflow-y:hidden; white-space: nowrap">
             <div @click="artistLookup(i.artistId)" v-for="i in artistResult.related_artists" style="margin-right: 15px; width: 120px; height: 158px; text-overflow: ellipsis; cursor:pointer">
               <v-avatar size="100px" :tile="false"  class="grey lighten-4">
                 <img style="object-fit: cover" :src="i.artistArtRef"/>
@@ -140,14 +151,22 @@
           </v-layout>
           <h3 v-if="albumResult.tracks && albumResult.tracks.length > 0" style="margin-bottom: 5px">Tracks</h3>
           <v-layout column v-cloak aria-rowindex="" style="overflow-y:hidden; white-space: nowrap">
-            <div v-on:click="selectSong(i)" v-for="i in albumResult.tracks">
-              
-            </div>
+            <v-list>
+              <template v-for="i in albumResult.tracks">
+                <v-list-tile v-bind:key="i.storeId" @click="selectSong(i)">
+                  <v-list-tile-content flex>
+                    <span style="display: inline">{{i.title}}</span>
+                  </v-list-tile-content>
+                    <span>{{i.normTime}}</span>
+                </v-list-tile>
+              </template>
+            </v-list>
           </v-layout>
         </v-layout>
       </v-container>
       <v-container>
         <v-card-actions>
+          <v-btn color="primary" @click.stop="addAlbumToQueue()">Add Album to Queue<v-icon>queue_music</v-icon></v-btn>
           <v-btn @click.stop="albumDialog=false">Close</v-btn>
         </v-card-actions>
       </v-container>
@@ -246,12 +265,6 @@
           },
           queueSuccess: function(id){
             this.dialog2 = false;
-            axios.get('https://marcderhammer.com/api/downloadStream/' + id).then(response => {
-              console.log('song downloaded to server');
-              this.$socket.emit('songReadyToPlay', id);
-            }).catch(e=>{
-              console.log(e);
-            });
           }
         },
         methods: {
@@ -281,17 +294,14 @@
             });
           },
           albumLookup: function(id){
-            this.searching = true;
             axios.get('https://marcderhammer.com/api/album/' + id).then(response => {
               response.data.tracks.forEach(element => {
                 element.normTime = this.millisToNorm(element.durationMillis);
               });
               this.albumResult = response.data;
-              this.searching = false;
               console.log(this.albumResult);
               this.albumDialog = true;
             }).catch(e=>{
-              this.searching = false;
               console.log(e);
             });
           },
@@ -317,7 +327,18 @@
             }
             this.$socket.emit('addSongToQueue', song);
             this.dialog3 = false;
+          },
+          addAlbumToQueue(){
             
+            var album = this.albumResult;
+            var socket = this.$socket;
+            var username = this.userName;
+            album.tracks.forEach(function(obj){
+              if(username){
+                obj.user = username;
+              }
+              socket.emit('addSongToQueue', obj);
+            });
           }
         }
       }

@@ -9,7 +9,8 @@ const store = new Vuex.Store({
     searchResults: {},
     songQueue: [],
     userName: '',
-    listening: false
+    listening: false,
+    volume: 100
   },
   mutations: {
     CHANGE(state, text){
@@ -29,6 +30,9 @@ const store = new Vuex.Store({
     },
     LEAVEAUDIO(state){
       state.listening = false;
+    },
+    VOLUME(state, val){
+      state.volume = val;
     }
   }
 })

@@ -23,16 +23,12 @@ new Vue({
   sockets: {
     connect: function() {
       console.log('sock connect');
-      this.pingServer();
     },
     songQueue: function(val){
-      console.log('recd' +  val);
       store.commit('UPDATESONGQUEUE', val);
     }
   },
   methods:{
-    pingServer(){
-    }
   }
   
 })

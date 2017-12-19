@@ -2,7 +2,7 @@
   <v-app dark>
     <v-toolbar controls fixed app :clipped-left="clipped">
       <v-spacer></v-spacer>
-      <audio ref="audio" @ended='songEnded' @timeupdate='onTimeUpdateListener' :src="musicSrc" preload="none" type="audio/mpeg"></audio>
+      <audio @error='audioError' ref="audio" @ended='songEnded' @timeupdate='onTimeUpdateListener' :src="musicSrc" preload="none" type="audio/mpeg"></audio>
       <h2 v-if="e1 !== 'Search'">{{e1}}</h2>
       <!--<v-btn  @click="joinAudio()" v-if="!listening && e1 !== 'Search'" flat color="blue" >
         <span>Join Audio</span>
@@ -59,6 +59,7 @@
 <script>
   import SearchBar from './components/SearchBar'
   import store from './vuex/store'
+  import axios from 'axios'
   export default {
     data () {
       return {
@@ -77,12 +78,20 @@
       listening(){
         return store.state.listening;
       },
+      volume(){
+        return store.state.volume;
+      },
       musicSrc(){
         var song = store.state.songQueue[0];
-        if(song){
+        
+        if(song && song.downloaded){
           console.log('song is' + song.storeId)
           return 'https://marcderhammer.com/audio/' + song.storeId + ".mp3";
         }
+        if(song && !song.downloaded){
+          return 'https://marcderhammer.com/audio/error.mp3';
+        }
+        return '';
       }
     },
     methods: {
@@ -98,10 +107,13 @@
         this.$refs.audio.pause();
 
       },
+      audioError: function(){
+        console.log('audio error!!');
+      },
       onTimeUpdateListener: function(){
         if(this.$refs && this.$refs.audio){
           this.currentTime = this.$refs.audio.currentTime;
-          this.currentTimeStamp = new Date().getMilliseconds();
+          this.currentTimeStamp = Date.now();
           var report = {
             prog: this.$refs.audio.currentTime
           }
@@ -117,11 +129,12 @@
       },
       syncToMaster: function(){
         if(this.listening && this.$socket.id !== this.lastProg.id){
-          var now = new Date().getMilliseconds();
-          var diff = now - this.lastProg.timeReceived;
+          var now = Date.now();
+          var diff = this.lastProg.timeReceived - this.currentTimeStamp;
           diff/=1000;
-          if(diff + Math.abs(this.lastProg.seconds - this.currentTime) > 1){
-            var timeShouldBe = this.lastProg.seconds + diff;
+          var currentlyReal = this.currentTime + diff;
+          if(Math.abs(currentlyReal - this.lastProg.seconds) > .25){
+            var timeShouldBe = this.lastProg.seconds;
             this.setTime(timeShouldBe);
             this.snackText = "Syncing you to master";
             this.snackbar = true;
@@ -136,12 +149,22 @@
         }else{
           this.$refs.audio.play();
         }
+      },
+      volume: function(val){
+        val /= 100;
+        this.$refs.audio.volume = val;
       }
     },
     components:{
       SearchBar
     },
     sockets: {
+      fixedSong: function(data){
+        if(this.listening){
+          this.$refs.audio.src = 'https://marcderhammer.com/audio/' + data + ".mp3";
+          this.$refs.audio.play();
+        }
+      },
       master: function(data){
         if(data){
           this.snackText = 'You have joined Audio and you are the audio master';
@@ -155,14 +178,11 @@
         this.snackText = 'You have been selected as the new Audio master';
         this.snackbar = true;
       },
-      songReadyToPlay: function(data){
-        if(this.listening && data === store.state.songQueue[0].storeId){
-          this.$refs.audio.src = 'https://marcderhammer.com/audio/' + data + ".mp3";
+      playNextSong: function(){
+        if(this.listening){
+
           this.$refs.audio.play();
         }
-      },
-      playNextSong: function(){
-        this.$refs.audio.play();
       },
       songProg: function(data){
         if(this.$socket.id === data.id){
@@ -171,7 +191,7 @@
           this.isMaster = false;
         }
         this.lastProg = data;
-        this.lastProg.timeReceived = new Date().getMilliseconds();
+        this.lastProg.timeReceived = Date.now();
         this.syncToMaster();
       }
     }
