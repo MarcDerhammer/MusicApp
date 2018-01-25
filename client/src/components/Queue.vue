@@ -11,7 +11,7 @@
                   <div style="max-height: 175px; overflow: hidden; text-overflow: ellipsis; text-align: center">
                     <h3>{{nowPlaying.title}}</h3>
                     <h4>{{nowPlaying.artist}}</h4>
-                    <h4>{{nowPlaying.album}} ({{nowPlaying.year}})</h4>
+                    <h4>{{nowPlaying.album}} ({{nowPlaying.year}})<v-icon v-if="nowPlaying.contentType==='1'">explicit</v-icon></h4>
                     <h6 v-if="nowPlaying.user" style="opacity: .6;">Queued by {{nowPlaying.user}}</h6>
                     <h6 v-if="nowPlaying.botAdd" style="opacity: .6;">Auto-added by the server</h6>
                   </div>
@@ -70,18 +70,27 @@
                 <span v-if="i.score < 0" style="color:red; opacity: .75">&nbsp;{{i.score}}&nbsp;</span>
                 <!--<v-icon @click="downvote(i)" class="vote">thumb_down</v-icon>&nbsp;&nbsp;
                 <v-icon @click="upvote(i)" class="vote">thumb_up</v-icon>-->
+
+                <v-tooltip top v-if="i.contentType==='1'"> 
+                  <span>Explicit</span>
+                  <v-btn slot="activator" flat icon>
+                    <v-icon class="vote">explicit</v-icon>
+                  </v-btn>
+                </v-tooltip>
+                
                 <v-tooltip top  v-if="master"> 
                   <span>Remove from Queue</span>
                   <v-btn slot="activator" flat icon>
                     <v-icon @click="remove(i)" class="vote">delete</v-icon>
                   </v-btn>
                 </v-tooltip>
-
+                
+                
 
                 <v-tooltip top  v-if="i.botAdd"> 
                   <span>Added by bot</span>
                   <v-btn  slot="activator" flat icon>
-                  <v-icon class="vote">adb</v-icon>
+                  <v-icon class="vote">storage</v-icon>
                   </v-btn>
                   </v-tooltip>
 

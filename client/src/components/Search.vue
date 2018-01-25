@@ -6,13 +6,14 @@
     <span v-if="noResults && !searching && rendered">No results...</span>
     <h2 v-if="rendered && !searching && searchResults.tracks && searchResults.tracks.length > 0" style="margin-bottom: 5px">Songs</h2>
     <v-layout v-if="!searching" v-cloak aria-rowindex="" style="overflow-y:hidden; white-space: nowrap">
-      <div v-on:click="selectSong(i)" v-for="i in searchResults.tracks" style="margin-right: 15px; width: 120px; height: 158px; text-overflow: ellipsis; cursor:pointer">
+      <div v-on:click="selectSong(i)" v-for="i in searchResults.tracks" style="margin-right: 15px; width: 120px; height: 174px; text-overflow: ellipsis; cursor:pointer">
         <v-avatar size="115px" :tile="true"  class="grey lighten-4">
           <img :src="i.albumArtRef[0].url"/>
         </v-avatar>
         <br>
         <h4 style="overflow:hidden; text-overflow: ellipsis">{{i.title}}</h4>
         <h5 style="overflow:hidden; text-overflow: ellipsis">{{i.artist}}</h5>
+        <v-icon v-if="i.contentType==='1'">explicit</v-icon>
       </div>
     </v-layout>
     <!-- Artists -->
@@ -109,6 +110,7 @@
               </v-avatar>
               <br>
               <h5 style="overflow:hidden; text-overflow: ellipsis">{{i.title}}</h5>
+              <v-icon v-if="i.contentType==='1'">explicit</v-icon>
             </div>
           </v-layout>
 
@@ -173,6 +175,7 @@
                   <v-list-tile-content flex>
                     <span style="display: inline">{{i.title}}</span>
                   </v-list-tile-content>
+                    <v-icon v-if="i.contentType==='1'">explicit&nbsp;&nbsp;</v-icon>
                     <span>{{i.normTime}}</span>
                 </v-list-tile>
               </template>
