@@ -2,3 +2,5 @@ server/node_modules/
 client/build/
 server/secrets.js
 server/music/
+express_api/secrets.js
+express_api/node_modules/
