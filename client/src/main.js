@@ -14,7 +14,7 @@ Vue.use(VueSocketio, "https://marcderhammer.com:3001");
 Vue.config.productionTip = false
 
 /* eslint-disable no-new */
-new Vue({
+var vm = new Vue({
   store,
   el: '#app',
   router,

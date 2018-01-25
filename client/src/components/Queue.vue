@@ -8,33 +8,48 @@
             <v-container fluid grid-list-lg>
               <v-layout row>
                 <v-flex xs7>
-                  <div style="max-height: 175px; overflow: hidden; text-overflow: ellipsis">
-                    <div class="headline">{{nowPlaying.title}}</div>
-                    <div>{{nowPlaying.artist}}</div>
-                    <div>{{nowPlaying.album}} ({{nowPlaying.year}})</div>
-                    <div v-if="nowPlaying.user" style="opacity: .6;">Queued by {{nowPlaying.user}}</div>
+                  <div style="max-height: 175px; overflow: hidden; text-overflow: ellipsis; text-align: center">
+                    <h3>{{nowPlaying.title}}</h3>
+                    <h4>{{nowPlaying.artist}}</h4>
+                    <h4>{{nowPlaying.album}} ({{nowPlaying.year}})</h4>
+                    <h6 v-if="nowPlaying.user" style="opacity: .6;">Queued by {{nowPlaying.user}}</h6>
                   </div>
+                  <v-layout style="cursor: pointer" row >
+                      <v-icon  @click='setVolume(100)' v-if="listening && volume == 0" style="margin-right: 25px">volume_mute</v-icon>
+                      <v-icon @click='setVolume(0)' v-if="listening && volume !== 0" style="margin-right: 25px">volume_up</v-icon>
+                      <v-slider v-if="listening" @input='updateVolume()' v-model="volume" step="0"></v-slider>
+                      <span v-if="nowPlaying.score > 0" style="color:green; opacity: .75; margin-top: 20px">&nbsp;+{{nowPlaying.score}}</span>
+                      <span v-if="nowPlaying.score < 0" style="color:red; opacity: .75; margin-top: 20px">&nbsp;{{nowPlaying.score}}</span>
+                  </v-layout>
+                  
                 </v-flex>
+                
                 <v-flex xs7>
-                    <v-card-media
-                      :src="nowPlaying.albumArtRef[0].url"
-                      height="175px"
-                      contain
-                    ></v-card-media>
+                    <img flex :src="nowPlaying.albumArtRef[0].url" width="100%"/>
                 </v-flex>
+                
               </v-layout>
-              <v-layout style="cursor: pointer" row v-if="listening">
-                <v-icon @click='setVolume(100)' v-if="volume == 0" style="margin-right: 25px">volume_mute</v-icon>
-                <v-icon @click='setVolume(0)' v-if="volume !== 0" style="margin-right: 25px">volume_up</v-icon>
-                <v-slider @input='updateVolume()' v-model="volume" step="0"></v-slider>
-                &nbsp;&nbsp;&nbsp;&nbsp;
-                <v-icon @click="downvote(nowPlaying)" class="vote">thumb_down</v-icon>&nbsp;&nbsp;
-                <v-icon @click="upvote(nowPlaying)" class="vote">thumb_up</v-icon>
-                <v-icon v-if="username.indexOf('Marc')>= 0" @click="remove(nowPlaying)" class="vote">&nbsp;delete</v-icon>
-              </v-layout>
-              
+              <v-layout row style="curstor:pointer; ">
+                      <v-tooltip top>
+                        <v-btn  slot="activator" flat icon><v-icon @click="downvote(nowPlaying)" class="vote">thumb_down</v-icon></v-btn>
+                        <span>Downvote</span>
+                      </v-tooltip>
+                      <v-tooltip top>
+                        <v-btn slot="activator" flat icon><v-icon @click="upvote(nowPlaying)" class="vote">thumb_up</v-icon></v-btn>
+                        <span>Upvote</span>
+                      </v-tooltip>
+                      <v-tooltip top>
+                        <v-btn slot="activator" flat icon>
+                        <v-icon class="vote">people</v-icon>
+                        <span class="vote">{{listeners}}</span>
+                        </v-btn>
+                        <span>Number of listeners</span>
+                      </v-tooltip>
+                      
+                      <v-icon v-if="master" @click="remove(nowPlaying)" class="vote">&nbsp;delete</v-icon>
+                  </v-layout>
             </v-container>
-            <v-progress-linear v-model="songProg"></v-progress-linear>
+            <v-progress-linear id="progBar" style="cursor:pointer" @click="clickProg($event)" v-model="songProg"></v-progress-linear>
           </v-card>
         </v-flex>
         <!--<v-flex><v-btn @click="showQueue()">Queue</v-btn><v-btn @click="showChat()">Chat <span style="color:red" v-if="unreadMessages > 0"> ({{unreadMessages}})</span></v-btn></v-flex>-->
@@ -50,9 +65,11 @@
                   <v-list-tile-sub-title style="overflow:hidden; text-overflow: ellipsis" v-html="i.artist"></v-list-tile-sub-title>
                 </v-list-tile-content>
                 <v-progress-circular indeterminate color="primary" v-if="!i.downloaded"></v-progress-circular>
-                <v-icon @click="downvote(i)" class="vote">thumb_down</v-icon>&nbsp;&nbsp;
-                <v-icon @click="upvote(i)" class="vote">thumb_up</v-icon>
-                <v-icon v-if="username.indexOf('Marc')>= 0" @click="remove(i)" class="vote">&nbsp;delete</v-icon>
+                <span v-if="i.score > 0" style="color:green; opacity: .75">&nbsp;+{{i.score}}&nbsp;</span>
+                <span v-if="i.score < 0" style="color:red; opacity: .75">&nbsp;{{i.score}}&nbsp;</span>
+                <!--<v-icon @click="downvote(i)" class="vote">thumb_down</v-icon>&nbsp;&nbsp;
+                <v-icon @click="upvote(i)" class="vote">thumb_up</v-icon>-->
+                <v-icon v-if="master" @click="remove(i)" class="vote">&nbsp;delete</v-icon>
               </v-list-tile>
             </template>
           </v-list>
@@ -88,6 +105,10 @@
   .vote:hover{
     opacity: .4;
     cursor: pointer;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
   }
 </style>
 <script>
@@ -99,7 +120,8 @@
         snackTimeout: 2500,
         snackbar: false,
         snackText: '',
-        volume: store.state.volume
+        volume: store.state.volume,
+        listeners: 0
       }
     },
     computed: {
@@ -114,6 +136,9 @@
       },
       username(){
         return store.state.userName;
+      },
+      master(){
+        return store.state.master;
       }
     },
     
@@ -123,11 +148,12 @@
         this.$socket.emit('removeFromQueue', song.storeId);
       },
       upvote(song){
-        this.snackText = "Voting doesn't work yet";
-        this.snackbar = true;
+        song.score++;
+        this.$socket.emit('upvote', song)
       },
       downvote(song){
-        this.upvote(song);
+        song.score--;
+        this.$socket.emit('downvote', song);
       },
       setVolume(val){
         this.volume = val;
@@ -143,15 +169,23 @@
       leaveAudio(){
         store.commit('LEAVEAUDIO')
         this.$socket.emit('leaveAudio', 'hey');
+      },
+      clickProg(event){
+        setProgress(event.offsetX/document.getElementById("progBar").offsetWidth);
       }
     },
     sockets: {
       songProg: function(data){
         this.songProg = data.percentage;
+        this.listeners = data.count;
       }
     },
     watch: {
-      
+      listening: function(val){
+        if(!val){
+          this.listeners--;
+        }
+      }
     }
   }
   

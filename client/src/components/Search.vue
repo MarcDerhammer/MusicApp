@@ -3,7 +3,8 @@
     <v-layout align-center justify-center>
       <v-progress-circular class="text-md-center" align-center v-if="searching" indeterminate v-bind:size="75" color="primary"></v-progress-circular>
     </v-layout>
-    <h2 v-if="!searching && searchResults.tracks && searchResults.tracks.length > 0" style="margin-bottom: 5px">Songs</h2>
+    <span v-if="noResults && !searching && rendered">No results...</span>
+    <h2 v-if="rendered && !searching && searchResults.tracks && searchResults.tracks.length > 0" style="margin-bottom: 5px">Songs</h2>
     <v-layout v-if="!searching" v-cloak aria-rowindex="" style="overflow-y:hidden; white-space: nowrap">
       <div v-on:click="selectSong(i)" v-for="i in searchResults.tracks" style="margin-right: 15px; width: 120px; height: 158px; text-overflow: ellipsis; cursor:pointer">
         <v-avatar size="115px" :tile="true"  class="grey lighten-4">
@@ -15,25 +16,36 @@
       </div>
     </v-layout>
     <!-- Artists -->
-    <h2 v-if="!searching && searchResults.artists && searchResults.artists.length > 0" style="margin-bottom: 5px; margin-top: 15px;">Artists</h2>
+    <h2 v-if="rendered && !searching && searchResults.artists && searchResults.artists.length > 0" style="margin-bottom: 5px; margin-top: 15px;">Artists</h2>
     <v-layout v-if="!searching" v-cloak aria-rowindex="" style="overflow-y:hidden; white-space: nowrap">
       <div @click="artistLookup(i.artistId)" v-for="i in searchResults.artists" style="margin-right: 15px; width: 120px; height: 158px; text-overflow: ellipsis; cursor:pointer">
         <v-avatar size="115px" :tile="false"  class="grey lighten-4">
           <img style="object-fit: cover" :src="i.artistArtRef"/>
         </v-avatar>
         <br>
-        <h4 style="overflow:hidden; text-overflow: ellipsis">{{i.name}}</h4>
+        <h4 style="overflow:hidden; text-overflow: ellipsis; text-align: center">{{i.name}}</h4>
       </div>
     </v-layout>
 
-    <h2 v-if="!searching && searchResults.albums && searchResults.albums.length > 0" style="margin-bottom: 5px; margin-top: 15px;">Albums</h2>
+    <h2 v-if="rendered && !searching && searchResults.albums && searchResults.albums.length > 0" style="margin-bottom: 5px; margin-top: 15px;">Albums</h2>
     <v-layout v-if="!searching" v-cloak aria-rowindex="" style="overflow-y:hidden; white-space: nowrap">
       <div @click="albumLookup(i.albumId)" v-for="i in searchResults.albums" style="margin-right: 15px; width: 120px; height: 158px; text-overflow: ellipsis; cursor:pointer">
         <v-avatar size="115px" :tile="false"  class="grey lighten-4">
           <img style="object-fit: cover" :src="i.albumArtRef"/>
         </v-avatar>
         <br>
-        <h4 style="overflow:hidden; text-overflow: ellipsis">{{i.name}}</h4>
+        <h4 style="overflow:hidden; text-overflow: ellipsis; text-align: center">{{i.name}}</h4>
+      </div>
+    </v-layout>
+
+    <h2 v-if="rendered && !searching && searchResults.radios && searchResults.radios.length > 0" style="margin-bottom: 5px; margin-top: 15px;">Stations</h2>
+    <v-layout v-if="!searching" v-cloak aria-rowindex="" style="overflow-y:hidden; white-space: nowrap">
+      <div @click="radioLookup(i.albumId)" v-for="i in searchResults.albums" style="margin-right: 15px; width: 120px; height: 158px; text-overflow: ellipsis; cursor:pointer">
+        <v-avatar size="115px" :tile="false"  class="grey lighten-4">
+          <img style="object-fit: cover" :src="i.albumArtRef"/>
+        </v-avatar>
+        <br>
+        <h4 style="overflow:hidden; text-overflow: ellipsis; text-align: center">{{i.name}}</h4>
       </div>
     </v-layout>
   <v-dialog v-model="dialog2" max-width="500px">
@@ -194,7 +206,6 @@
           </v-container>
         </v-card>
       </v-flex>
-    </v-card>
   </v-dialog>
 
   <v-snackbar
@@ -213,6 +224,8 @@
     import store from '../vuex/store'
     var debounce = require('debounce');
     import axios from 'axios'
+   
+    
     export default {
         data () {
           var stored = localStorage.getItem("Name");
@@ -234,10 +247,12 @@
           snackText: '',
           snackTimeout: 2500,
           alertMessage: '',
+          noResults: false,
           artistDialog: false,
           artistResult: {},
           albumResult: {},
-          albumDialog: false
+          albumDialog: false,
+          rendered: true
 
         }},
         computed: {
@@ -250,8 +265,8 @@
         },
         watch: {
           searchTerm: function(searchTerm){
-            this.searching=true;
-            this.search(searchTerm)
+            /*this.searching=true;
+            this.search(searchTerm)*/
           }
         },
         sockets: {
@@ -267,20 +282,40 @@
             this.dialog2 = false;
           }
         },
+        mounted(){
+          var v = this;
+          EventBus.$on('search', function(wo){
+            v.search(wo);
+          });
+        },
         methods: {
-          search: debounce(function(search){
-            if(search)
-              axios.get('https://marcderhammer.com/api/search/' + search).then(response => {
-                this.searchResults = response.data;
-                this.updateSearch(response.data);
-                this.searching = false;
-              }).catch(e=>{
-                this.searching = false;
-                this.searchResults = {}
-                this.updateSearch(this.searchResults);
-              });
-              this.searching = false; 
-          }, 350),
+          search: (function(search){
+            if(search){
+                this.searching = true;
+                var par = this;
+                axios.get('https://marcderhammer.com/api/search/' + search).then(response => {
+                  this.searchResults = response.data;
+                  this.noResults = false;
+                  this.updateSearch(response.data);
+                  this.rendered = true;
+                  this.searching = false;
+                  console.log('done search');
+                  if(!this.searchResults || (this.searchResults.tracks.length === 0 && this.searchResults.artists.length === 0 && this.searchResults.albums.length === 0 && this.searchResults.radios.length === 0)){
+                    console.log('NO results');
+                    this.noResults = true;
+                  }
+                  this.$nextTick().then(function(){
+                    console.log('done rendering');
+                    par.rendered = true;
+                  });
+                }).catch(e=>{
+                  this.searching = false;
+                  this.rendered = false;
+                  this.searchResults = {}
+                  this.updateSearch(this.searchResults);
+                });
+            }
+          }),
           artistLookup: function(id){
             this.searching = true;
             axios.get('https://marcderhammer.com/api/artist/' + id).then(response => {
@@ -342,5 +377,7 @@
           }
         }
       }
+
+    
     
 </script>

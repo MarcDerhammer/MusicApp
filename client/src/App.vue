@@ -17,7 +17,7 @@
       </v-btn>-->
     </v-toolbar>
     <v-content>
-      <router-view style="margin-bottom: 50px"></router-view>
+      <router-view ref="main" style="margin-bottom: 50px"></router-view>
     </v-content>
     <v-bottom-nav style="overflow: hidden" fixed :value="true" :active.sync="e1" color="blue grey darken-4">
       <v-btn flat color="blue" value="Queue" href="#/">
@@ -60,6 +60,8 @@
   import SearchBar from './components/SearchBar'
   import store from './vuex/store'
   import axios from 'axios'
+  import Vue from 'Vue'
+  window.EventBus = new Vue();
   export default {
     data () {
       return {
@@ -68,7 +70,7 @@
         snackTimeout: 2500,
         snackbar: false,
         snackText: '',
-        currentTime: '00:00',
+        currentTime: null,
         currentTimeStamp: 0,
         lastProg: {},
         isMaster: false
@@ -83,9 +85,7 @@
       },
       musicSrc(){
         var song = store.state.songQueue[0];
-        
         if(song && song.downloaded){
-          console.log('song is' + song.storeId)
           return 'https://marcderhammer.com/audio/' + song.storeId + ".mp3";
         }
         if(song && !song.downloaded){
@@ -104,6 +104,7 @@
       leaveAudio(){
         store.commit('LEAVEAUDIO')
         this.$socket.emit('leaveAudio', 'hey');
+        this.isMaster = false;
         this.$refs.audio.pause();
 
       },
@@ -112,13 +113,17 @@
       },
       onTimeUpdateListener: function(){
         if(this.$refs && this.$refs.audio){
+          var oldTime = this.currentTime;
           this.currentTime = this.$refs.audio.currentTime;
           this.currentTimeStamp = Date.now();
           var report = {
             prog: this.$refs.audio.currentTime
           }
-          this.$socket.emit('songReport', report);
+          if(oldTime != null && oldTime != this.currentTime)
+            this.$socket.emit('songReport', report);
         }
+        
+        
       },
       songEnded: function(){
         this.$socket.emit('songEnded');
@@ -133,7 +138,7 @@
           var diff = this.lastProg.timeReceived - this.currentTimeStamp;
           diff/=1000;
           var currentlyReal = this.currentTime + diff;
-          if(Math.abs(currentlyReal - this.lastProg.seconds) > .25){
+          if(Math.abs(currentlyReal - this.lastProg.seconds) > 1){
             var timeShouldBe = this.lastProg.seconds;
             this.setTime(timeShouldBe);
             this.snackText = "Syncing you to master";
@@ -153,6 +158,10 @@
       volume: function(val){
         val /= 100;
         this.$refs.audio.volume = val;
+      },
+      isMaster: function(val){
+        console.log(val);
+        store.commit('MASTER', val);
       }
     },
     components:{
@@ -168,6 +177,7 @@
       master: function(data){
         if(data){
           this.snackText = 'You have joined Audio and you are the audio master';
+          store.commit('MASTER', true);
           this.snackbar = true;
         }else{
           this.snackText = 'You have joined Audio';
@@ -176,6 +186,7 @@
       },
       newMaster: function(){
         this.snackText = 'You have been selected as the new Audio master';
+        store.commit('MASTER', true);
         this.snackbar = true;
       },
       playNextSong: function(){
@@ -185,14 +196,16 @@
         }
       },
       songProg: function(data){
-        if(this.$socket.id === data.id){
-          this.isMaster = true;
-        }else{
-          this.isMaster = false;
+        if(this.listening){
+          if(this.$socket.id === data.id){
+            this.isMaster = true;
+          }else{
+            this.isMaster = false;
+          }
+          this.lastProg = data;
+          this.lastProg.timeReceived = Date.now();
+          this.syncToMaster();
         }
-        this.lastProg = data;
-        this.lastProg.timeReceived = Date.now();
-        this.syncToMaster();
       }
     }
   }
