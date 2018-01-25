@@ -132,8 +132,8 @@
       setTime: function(time){
         this.$refs.audio.currentTime = time;
       },
-      syncToMaster: function(){
-        if(this.listening && this.$socket.id !== this.lastProg.id){
+      syncToMaster: function(override){
+        if(this.listening && this.$socket.id !== this.lastProg.id || override){
           var now = Date.now();
           var diff = this.lastProg.timeReceived - this.currentTimeStamp;
           diff/=1000;
@@ -204,7 +204,20 @@
           }
           this.lastProg = data;
           this.lastProg.timeReceived = Date.now();
-          this.syncToMaster();
+          this.syncToMaster(false);
+        }
+      },
+      songProgChange: function(data){
+        console.log(data);
+        if(this.listening){
+          if(this.$socket.id === data.id){
+            this.isMaster = true;
+          }else{
+            this.isMaster = false;
+          }
+          this.lastProg = data;
+          this.lastProg.timeReceived = Date.now();
+          this.syncToMaster(true);
         }
       }
     }

@@ -95,7 +95,11 @@
           <v-layout align-center justify-center>
             <div>
               <div class="headline">{{artistResult.name}}</div>
+              
             </div>
+          </v-layout>
+          <v-layout align-center justify-center>
+            <v-btn @click="rad(artistResult.artistId)" color="primary">"Radio" Auto-Add this Artist</v-btn>
           </v-layout>
           <h3 v-if="artistResult.topTracks && artistResult.topTracks.length > 0" style="margin-bottom: 5px">Top Songs</h3>
           <v-layout v-cloak aria-rowindex="" style="overflow-y:hidden; white-space: nowrap">
@@ -261,6 +265,9 @@
             },
             userName(){
               return store.state.userName;
+            },
+            master(){
+              return store.state.master;
             }
         },
         watch: {
@@ -289,6 +296,13 @@
           });
         },
         methods: {
+          rad: function(id){
+            var aa = {
+              type: 'artist',
+              id: id
+            }
+            this.$socket.emit('setAA', aa);
+          },
           search: (function(search){
             if(search){
                 this.searching = true;

@@ -13,6 +13,7 @@
                     <h4>{{nowPlaying.artist}}</h4>
                     <h4>{{nowPlaying.album}} ({{nowPlaying.year}})</h4>
                     <h6 v-if="nowPlaying.user" style="opacity: .6;">Queued by {{nowPlaying.user}}</h6>
+                    <h6 v-if="nowPlaying.botAdd" style="opacity: .6;">Auto-added by the server</h6>
                   </div>
                   <v-layout style="cursor: pointer" row >
                       <v-icon  @click='setVolume(100)' v-if="listening && volume == 0" style="margin-right: 25px">volume_mute</v-icon>
@@ -45,7 +46,6 @@
                         </v-btn>
                         <span>Number of listeners</span>
                       </v-tooltip>
-                      
                       <v-icon v-if="master" @click="remove(nowPlaying)" class="vote">&nbsp;delete</v-icon>
                   </v-layout>
             </v-container>
@@ -53,7 +53,7 @@
           </v-card>
         </v-flex>
         <!--<v-flex><v-btn @click="showQueue()">Queue</v-btn><v-btn @click="showChat()">Chat <span style="color:red" v-if="unreadMessages > 0"> ({{unreadMessages}})</span></v-btn></v-flex>-->
-        <v-flex xs12 >
+        <v-flex style="width: 500px" xs12 >
           <v-list two-line style="max-width: 500px; ">
             <template v-if="index !== 0" style="max-width: 500px" v-for="(i, index) in queue">
               <v-list-tile avatar v-bind:key="i.nid" >
@@ -64,12 +64,33 @@
                   <v-list-tile-title style="overflow:hidden; text-overflow: ellipsis" v-html="i.title"></v-list-tile-title>
                   <v-list-tile-sub-title style="overflow:hidden; text-overflow: ellipsis" v-html="i.artist"></v-list-tile-sub-title>
                 </v-list-tile-content>
+
                 <v-progress-circular indeterminate color="primary" v-if="!i.downloaded"></v-progress-circular>
                 <span v-if="i.score > 0" style="color:green; opacity: .75">&nbsp;+{{i.score}}&nbsp;</span>
                 <span v-if="i.score < 0" style="color:red; opacity: .75">&nbsp;{{i.score}}&nbsp;</span>
                 <!--<v-icon @click="downvote(i)" class="vote">thumb_down</v-icon>&nbsp;&nbsp;
                 <v-icon @click="upvote(i)" class="vote">thumb_up</v-icon>-->
-                <v-icon v-if="master" @click="remove(i)" class="vote">&nbsp;delete</v-icon>
+                <v-tooltip top  v-if="master"> 
+                  <span>Remove from Queue</span>
+                  <v-btn slot="activator" flat icon>
+                    <v-icon @click="remove(i)" class="vote">delete</v-icon>
+                  </v-btn>
+                </v-tooltip>
+
+
+                <v-tooltip top  v-if="i.botAdd"> 
+                  <span>Added by bot</span>
+                  <v-btn  slot="activator" flat icon>
+                  <v-icon class="vote">adb</v-icon>
+                  </v-btn>
+                  </v-tooltip>
+
+                <v-tooltip top  v-if="!i.botAdd"> 
+                  <span>Added by human</span>
+                  <v-btn  slot="activator" flat icon>
+                  <v-icon class="vote">person</v-icon>
+                  </v-btn>
+                  </v-tooltip>
               </v-list-tile>
             </template>
           </v-list>
@@ -171,7 +192,11 @@
         this.$socket.emit('leaveAudio', 'hey');
       },
       clickProg(event){
-        setProgress(event.offsetX/document.getElementById("progBar").offsetWidth);
+        //EventBus.$emit('setProgress', event.offsetX/document.getElementById("progBar").offsetWidth);
+        var prog = event.offsetX/document.getElementById("progBar").offsetWidth;
+        if(this.master){
+          this.$socket.emit('masterSetProg', prog);
+        }
       }
     },
     sockets: {
