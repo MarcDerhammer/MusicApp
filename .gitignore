@@ -4,3 +4,8 @@ server/secrets.js
 server/music/
 express_api/secrets.js
 express_api/node_modules/
+socketio_server/fullchain.pem
+socketio_server/chain.pem
+socketio_server/cert.pem
+socketio_server/privkey.pem
+socketio_server/node_modules
