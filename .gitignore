@@ -9,3 +9,10 @@ socketio_server/chain.pem
 socketio_server/cert.pem
 socketio_server/privkey.pem
 socketio_server/node_modules
+server/express_api/secrets.js
+server/express_api/node_modules/
+server/socketio_server/fullchain.pem
+server/socketio_server/chain.pem
+server/socketio_server/cert.pem
+server/socketio_server/privkey.pem
+server/socketio_server/node_modules/
