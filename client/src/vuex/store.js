@@ -10,7 +10,7 @@ const store = new Vuex.Store({
     songQueue: [],
     userName: '',
     listening: false,
-    volume: 100,
+    volume: 50,
     master: false
   },
   mutations: {

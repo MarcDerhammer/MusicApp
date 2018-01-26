@@ -208,15 +208,17 @@ io.on('connection', function(socket){
   });
 
   socket.on('removeFromQueue', function(id){
-    for(var i = 0; i < songQueue.length; i++){
-      if(songQueue[i].storeId === id){
-        songQueue.splice(i, 1);
-        writeQueueToFile();
-        io.emit('songQueue', songQueue);
-        if(i ==0){
-          io.emit('playNextSong', 'yea');
+    if(socket.master){
+      for(var i = 0; i < songQueue.length; i++){
+        if(songQueue[i].storeId === id){
+          songQueue.splice(i, 1);
+          writeQueueToFile();
+          io.emit('songQueue', songQueue);
+          if(i ==0){
+            io.emit('playNextSong', 'yea');
+          }
+          break;
         }
-        break;
       }
     }
   });
@@ -347,18 +349,20 @@ io.on('connection', function(socket){
               writeQueueToFile();
               oneWasAdded = true;
               return;
-            }else{
-              if(stationCreateAttempts < 15){
-              console.log('station was exhausted.. making a new one!');
-              createStationAndAddSongs(aaStation);
-              }else{
-                console.log('you must have listened to all the possible station songs.. i cant get any new ones.. or somethings broken');
-              }
             }
           }
         }
       });
-      botAddSongToQueue()
+      if(!oneWasAdded){
+        if(stationCreateAttempts < 15){
+          console.log('station was exhausted.. making a new one!');
+          createStationAndAddSongs(aaStation);
+          }else{
+            console.log('you must have listened to all the possible station songs.. i cant get any new ones.. or somethings broken');
+          }
+      }else{
+        botAddSongToQueue()
+      }
     }
   };
 
@@ -431,7 +435,7 @@ io.on('connection', function(socket){
           }
         }
     
-        /*if(!masterExists){
+        if(!masterExists){
           socket.master = true;
           socket.listening = true;
           console.log('a master has been chosen');
@@ -448,12 +452,13 @@ io.on('connection', function(socket){
           io.emit('songProg', prog);
 
           masterProg = prog;
-        }*/
-        if(!masterProg || !masterProg.time || now - masterProg.time > 10000){
-          console.log("'master' is too far behind... clearing masters");
-          for (var i in io.sockets.connected) {
-            var s = io.sockets.connected[i];
-            s.master = false;
+        }else{
+          if(!masterProg || !masterProg.time || now - masterProg.time > 10000){
+            console.log("'master' is too far behind... clearing masters");
+            for (var i in io.sockets.connected) {
+              var s = io.sockets.connected[i];
+              s.master = false;
+            }
           }
         }
       }
@@ -470,7 +475,7 @@ io.on('connection', function(socket){
   });
 
   socket.on('pinger', function(msg){
-    io.emit('pingback', 'whatup');
+    socket.emit('pingback', 'whatup');
   });
 });
 

@@ -2,7 +2,7 @@
   <v-app dark>
     <v-toolbar controls fixed app :clipped-left="clipped">
       <v-spacer></v-spacer>
-      <audio @error='audioError' ref="audio" @ended='songEnded' @timeupdate='onTimeUpdateListener' :src="musicSrc" preload="none" type="audio/mpeg"></audio>
+      <audio id="audioId" @error='audioError' title="wahey" ref="audioEl" @ended='songEnded' @timeupdate='onTimeUpdateListener' :src="musicSrc" preload="none" type="audio/mpeg" autobuffer></audio>
       <h2 v-if="e1 !== 'Search'">{{e1}}</h2>
       <!--<v-btn  @click="joinAudio()" v-if="!listening && e1 !== 'Search'" flat color="blue" >
         <span>Join Audio</span>
@@ -32,7 +32,7 @@
         <span>You</span>
         <v-icon>person</v-icon>
       </v-btn>
-      <v-btn v-if="!listening" @click="joinAudio()" color="blue" value="">
+      <!--<v-btn v-if="!listening" @click="joinAudio()" color="blue" value="">
         <v-icon>volume_mute</v-icon>
       </v-btn>
       <v-btn v-if="listening && isMaster" @click="leaveAudio()" color="blue" value="">
@@ -41,7 +41,7 @@
       </v-btn>
       <v-btn v-if="listening && !isMaster" @click="leaveAudio()" color="blue" value="">
         <v-icon>volume_up</v-icon>
-      </v-btn>
+      </v-btn>-->
     </v-bottom-nav>
     <v-snackbar
       :timeout="snackTimeout"
@@ -98,26 +98,27 @@
       joinAudio(){
         store.commit('JOINAUDIO', true);
         this.$socket.emit('joinAudio', 'hey');
-        this.$refs.audio.play();
+        console.log(this.$refs.audioEl);
+        //this.$refs.audioEl.play();
         this.syncToMaster();
       },
       leaveAudio(){
         store.commit('LEAVEAUDIO')
         this.$socket.emit('leaveAudio', 'hey');
         this.isMaster = false;
-        this.$refs.audio.pause();
+        //this.$refs.audioEl.pause();
 
       },
       audioError: function(){
         console.log('audio error!!');
       },
       onTimeUpdateListener: function(){
-        if(this.$refs && this.$refs.audio){
+        if(this.$refs && this.$refs.audioEl){
           var oldTime = this.currentTime;
-          this.currentTime = this.$refs.audio.currentTime;
+          this.currentTime = this.$refs.audioEl.currentTime;
           this.currentTimeStamp = Date.now();
           var report = {
-            prog: this.$refs.audio.currentTime
+            prog: this.$refs.audioEl.currentTime
           }
           if(oldTime != null && oldTime != this.currentTime)
             this.$socket.emit('songReport', report);
@@ -130,7 +131,7 @@
       },
 
       setTime: function(time){
-        this.$refs.audio.currentTime = time;
+        this.$refs.audioEl.currentTime = time;
       },
       syncToMaster: function(override){
         if(this.listening && this.$socket.id !== this.lastProg.id || override){
@@ -148,16 +149,17 @@
       }
     },
     watch: {
-      listening: function(val){
+      /*listening: function(val){
         if(!val){
-          this.$refs.audio.pause();
+          this.$refs.audioEl.pause();
         }else{
-          this.$refs.audio.play();
+          console.log(this.$refs.audioEl);
+          this.$refs.audioEl.play();
         }
-      },
+      },*/
       volume: function(val){
         val /= 100;
-        this.$refs.audio.volume = val;
+        this.$refs.audioEl.volume = val;
       },
       isMaster: function(val){
         console.log(val);
@@ -168,12 +170,6 @@
       SearchBar
     },
     sockets: {
-      fixedSong: function(data){
-        if(this.listening){
-          this.$refs.audio.src = 'https://marcderhammer.com/audio/' + data + ".mp3";
-          this.$refs.audio.play();
-        }
-      },
       master: function(data){
         if(data){
           this.snackText = 'You have joined Audio and you are the audio master';
@@ -191,8 +187,7 @@
       },
       playNextSong: function(){
         if(this.listening){
-
-          this.$refs.audio.play();
+          this.$refs.audioEl.play();
         }
       },
       songProg: function(data){

@@ -2,35 +2,60 @@
   <v-container fluid>
     <v-slide-y-transition mode="out-in">
       <v-layout column align-center>
-        <h4>Now Playing:</h4>
         <v-flex style="width: 500px" v-if="nowPlaying" xs12>
           <v-card class="white--text">
-            <v-container fluid grid-list-lg>
-              <v-layout row>
-                <v-flex xs7>
-                  <div style="max-height: 175px; overflow: hidden; text-overflow: ellipsis; text-align: center">
+            <v-container style="padding-bottom: 6px; padding-top: 6px">
+              <v-layout style="margin-bottom: 8px;" row>
+                <v-flex flex align-center style="text-align:center">
+                  <span v-if="!listening" style="font-weight: lighter; font-size: 10px;">Press the play button to join audio stream</span>
+                  <span v-if="!master && listening" style="font-weight: lighter; font-size: 10px;">Listening is synced with another source</span>
+                  <span v-if="master" style="font-weight: lighter; font-size: 10px;">You are the audio master and have full control</span>
+                  <span v-if="listening && listeners == 2" style="font-weight: lighter; font-size: 10px; display:block">There is {{listeners-1}} other device listening to the stream</span>
+                  <span v-if="listening && listeners > 2" style="font-weight: lighter; font-size: 10px; display:block">There are {{listeners-1}} other devices listening to the stream</span>
+                </v-flex>
+              </v-layout>
+                <v-layout row>
+                <v-flex xs12>
+                  <img flex :src="nowPlaying.albumArtRef[0].url" width="100%"/>
+                </v-flex>
+                </v-layout>
+                <v-layout flex row>
+                  <v-flex flex align-center style="max-height: 175px; overflow: hidden; text-overflow: ellipsis; text-align: center">
                     <h3>{{nowPlaying.title}}</h3>
-                    <h4>{{nowPlaying.artist}}</h4>
-                    <h4>{{nowPlaying.album}} ({{nowPlaying.year}})<v-icon v-if="nowPlaying.contentType==='1'">explicit</v-icon></h4>
-                    <h6 v-if="nowPlaying.user" style="opacity: .6;">Queued by {{nowPlaying.user}}</h6>
-                    <h6 v-if="nowPlaying.botAdd" style="opacity: .6;">Auto-added by the server</h6>
-                  </div>
-                  <v-layout style="cursor: pointer" row >
+                    <h4 style="font-weight: lighter">{{nowPlaying.artist}}</h4>
+                    <h4 style="font-weight: lighter; opacity: .8">{{nowPlaying.album}} ({{nowPlaying.year}})<v-icon v-if="nowPlaying.contentType==='1'">explicit</v-icon></h4>
+                    <h6 v-if="nowPlaying.user" style="opacity: .5; font-weight: lighter">Queued by {{nowPlaying.user}}</h6>
+                    <h6 v-if="nowPlaying.botAdd" style="opacity: .5; font-weight: lighter">Auto-added by the server</h6>
+                  </v-flex>
+                </v-layout>
+                <v-layout row>
+                  <v-icon style="font-size: 12px" @click="downvote(nowPlaying)" class="vote">thumb_down</v-icon>
+                  <v-flex flex="100" align-center style="text-align: center; display: inline block;">
+                        <v-icon @click="previous()" class="vote controls">skip_previous</v-icon>
+                        <v-icon v-if="!listening" @click="joinAudio()" class="vote controls">play_arrow</v-icon>
+                        <v-icon v-if="listening" @click="leaveAudio()" class="vote controls">pause</v-icon>
+                        <v-icon @click="remove(nowPlaying)" class="vote">skip_next</v-icon>
+                  </v-flex>
+                  <v-icon style="font-size: 12px" @click="downvote(nowPlaying)" class="vote">thumb_up</v-icon>
+                </v-layout>
+                
+                <v-layout row style="cursor: pointer" middle v-if="listening">
+                      <v-icon @click='unmute()' v-if="volume == 0" style="margin-right: 25px">volume_mute</v-icon>
+                      <v-icon @click='mute()' v-if="volume !== 0" style="margin-right: 25px">volume_up</v-icon>
+                      <v-slider @input='updateVolume()' v-model="volume" step="0"></v-slider>
+                </v-layout>
+                  
+                  <!--<v-layout style="cursor: pointer" row >
                       <v-icon  @click='setVolume(100)' v-if="listening && volume == 0" style="margin-right: 25px">volume_mute</v-icon>
                       <v-icon @click='setVolume(0)' v-if="listening && volume !== 0" style="margin-right: 25px">volume_up</v-icon>
                       <v-slider v-if="listening" @input='updateVolume()' v-model="volume" step="0"></v-slider>
                       <span v-if="nowPlaying.score > 0" style="color:green; opacity: .75; margin-top: 20px">&nbsp;+{{nowPlaying.score}}</span>
                       <span v-if="nowPlaying.score < 0" style="color:red; opacity: .75; margin-top: 20px">&nbsp;{{nowPlaying.score}}</span>
-                  </v-layout>
+                  </v-layout>-->
                   
-                </v-flex>
+                    
                 
-                <v-flex xs7>
-                    <img flex :src="nowPlaying.albumArtRef[0].url" width="100%"/>
-                </v-flex>
-                
-              </v-layout>
-              <v-layout row style="curstor:pointer; ">
+              <!--<v-layout row style="curstor:pointer; ">
                       <v-tooltip top>
                         <v-btn  slot="activator" flat icon><v-icon @click="downvote(nowPlaying)" class="vote">thumb_down</v-icon></v-btn>
                         <span>Downvote</span>
@@ -47,9 +72,9 @@
                         <span>Number of listeners</span>
                       </v-tooltip>
                       <v-icon v-if="master" @click="remove(nowPlaying)" class="vote">&nbsp;delete</v-icon>
-                  </v-layout>
+                  </v-layout>-->
             </v-container>
-            <v-progress-linear id="progBar" style="cursor:pointer" @click="clickProg($event)" v-model="songProg"></v-progress-linear>
+            <v-progress-linear id="progBar" style="cursor:pointer; margin-top:0px" @click="clickProg($event)" v-model="songProg"></v-progress-linear>
           </v-card>
         </v-flex>
         <!--<v-flex><v-btn @click="showQueue()">Queue</v-btn><v-btn @click="showChat()">Chat <span style="color:red" v-if="unreadMessages > 0"> ({{unreadMessages}})</span></v-btn></v-flex>-->
@@ -73,8 +98,8 @@
 
                 <v-tooltip top v-if="i.contentType==='1'"> 
                   <span>Explicit</span>
-                  <v-btn slot="activator" flat icon>
-                    <v-icon class="vote">explicit</v-icon>
+                  <v-btn disabled slot="activator" flat icon>
+                    <v-icon >explicit</v-icon>
                   </v-btn>
                 </v-tooltip>
                 
@@ -89,15 +114,15 @@
 
                 <v-tooltip top  v-if="i.botAdd"> 
                   <span>Added by bot</span>
-                  <v-btn  slot="activator" flat icon>
-                  <v-icon class="vote">storage</v-icon>
+                  <v-btn disabled slot="activator" flat icon>
+                  <v-icon >storage</v-icon>
                   </v-btn>
                   </v-tooltip>
 
                 <v-tooltip top  v-if="!i.botAdd"> 
                   <span>Added by human</span>
-                  <v-btn  slot="activator" flat icon>
-                  <v-icon class="vote">person</v-icon>
+                  <v-btn disabled slot="activator" flat icon>
+                  <v-icon >person</v-icon>
                   </v-btn>
                   </v-tooltip>
               </v-list-tile>
@@ -140,6 +165,9 @@
     -ms-user-select: none;
     user-select: none;
   }
+  .controls{
+    padding: 8px;
+  }
 </style>
 <script>
   import store from '../vuex/store'
@@ -151,7 +179,8 @@
         snackbar: false,
         snackText: '',
         volume: store.state.volume,
-        listeners: 0
+        listeners: 0,
+        lastVol: 100
       }
     },
     computed: {
@@ -173,9 +202,24 @@
     },
     
     methods: {
-
+      onlyMasterCan(rest){
+        this.snackText = "Only the Master audio controller can " + rest;
+        this.snackbar = true;
+      },
       remove(song){
-        this.$socket.emit('removeFromQueue', song.storeId);
+        if(!this.master){
+          this.onlyMasterCan("skip songs");
+          this.$socket.emit('removeFromQueue', song.storeId);
+        }else{
+          this.$socket.emit('removeFromQueue', song.storeId);
+        }
+      },
+      previous(){
+        if(this.master){
+          this.$socket.emit('masterSetProg', 0);
+        }else{
+          this.onlyMasterCan("change song progress");
+        }
       },
       upvote(song){
         song.score++;
@@ -189,22 +233,33 @@
         this.volume = val;
         store.commit('VOLUME', val);
       },
+      mute(){
+        this.lastVol = this.volume;
+        this.setVolume(0)
+      },
+      unmute(){
+        this.setVolume(this.lastVol)
+      },
       updateVolume(){
         store.commit('VOLUME', this.volume);
       },
       joinAudio(){
         store.commit('JOINAUDIO', true);
+        document.getElementById('audioId').play();
         this.$socket.emit('joinAudio', 'hey');
       },
       leaveAudio(){
         store.commit('LEAVEAUDIO')
         this.$socket.emit('leaveAudio', 'hey');
+        document.getElementById('audioId').pause();
       },
       clickProg(event){
         //EventBus.$emit('setProgress', event.offsetX/document.getElementById("progBar").offsetWidth);
         var prog = event.offsetX/document.getElementById("progBar").offsetWidth;
         if(this.master){
           this.$socket.emit('masterSetProg', prog);
+        }else{
+          this.onlyMasterCan("change song progress");
         }
       }
     },
