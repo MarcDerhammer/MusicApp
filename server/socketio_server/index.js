@@ -435,9 +435,8 @@ io.on('connection', function(socket){
           }
         }
     
-        if(!masterExists){
+        if(!masterExists && socket.listening){
           socket.master = true;
-          socket.listening = true;
           console.log('a master has been chosen');
           socket.emit("newMaster", true);
           var percentage = (data.prog * 1000)/songQueue[0].durationMillis;
