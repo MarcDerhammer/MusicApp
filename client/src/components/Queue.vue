@@ -12,7 +12,6 @@
                   <span v-if="master" style="font-weight: lighter; font-size: 10px;">You are the audio master and have full control</span>
                   <span v-if="listening && listeners == 2" style="font-weight: lighter; font-size: 10px; display:block">There is {{listeners-1}} other device listening to the stream</span>
                   <span v-if="listening && listeners > 2" style="font-weight: lighter; font-size: 10px; display:block">There are {{listeners-1}} other devices listening to the stream</span>
-                  <span v-if="songProg && songProg.aa" style="font-weight: lighter; font-size: 10px; display:block">Auto-adding from {{songProg.aa}}</span>
                 </v-flex>
               </v-layout>
                 <v-layout row>
@@ -129,17 +128,8 @@
               </v-list-tile>
             </template>
           </v-list>
+        <span v-if="aa" style="font-weight: lighter; font-size: 16px; display:block; text-align:center; margin-top: 35px">Auto-adding from {{aa}}.  Search for a new artist or radio station to change!</span>
         </v-flex>
-        <!--
-        <v-flex v-if="!showingQueue" xs12 style="max-height: 200px; overflow-y: auto" >
-          <v-list style="max-width: 500px; ">
-            <template style="max-width: 500px" v-for="i in queue">
-              <v-list-tile v-bind:key="i.nid" >
-                  <span style="text-overflow: break-word" >{{i.artist}}: {{i.title}}</span>
-              </v-list-tile>
-            </template>
-          </v-list>
-        </v-flex>-->
       </v-layout>
     </v-slide-y-transition>
     <v-snackbar
@@ -176,6 +166,7 @@
     data () {
       return {
         songProg: 0,
+        aa: '',
         snackTimeout: 2500,
         snackbar: false,
         snackText: '',
@@ -268,6 +259,7 @@
       songProg: function(data){
         this.songProg = data.percentage;
         this.listeners = data.count;
+        this.aa = data.aa;
       }
     },
     watch: {
