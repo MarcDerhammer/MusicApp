@@ -6,7 +6,7 @@
     <span v-if="noResults && !searching && rendered">No results...</span>
     <h2 v-if="rendered && !searching && searchResults.tracks && searchResults.tracks.length > 0" style="margin-bottom: 5px">Songs</h2>
     <v-layout v-if="!searching" v-cloak aria-rowindex="" style="overflow-y:hidden; white-space: nowrap">
-      <div v-on:click="selectSong(i)" v-for="i in searchResults.tracks" style="margin-right: 15px; width: 120px; height: 174px; text-overflow: ellipsis; cursor:pointer">
+      <div v-on:click="selectSong(i)" v-bind:key="i.storeId" v-for="i in searchResults.tracks" style="margin-right: 15px; width: 120px; height: 174px; text-overflow: ellipsis; cursor:pointer">
         <v-avatar size="115px" :tile="true"  class="grey lighten-4">
           <img :src="i.albumArtRef[0].url"/>
         </v-avatar>
@@ -19,7 +19,7 @@
     <!-- Artists -->
     <h2 v-if="rendered && !searching && searchResults.artists && searchResults.artists.length > 0" style="margin-bottom: 5px; margin-top: 15px;">Artists</h2>
     <v-layout v-if="!searching" v-cloak aria-rowindex="" style="overflow-y:hidden; white-space: nowrap">
-      <div @click="artistLookup(i.artistId)" v-for="i in searchResults.artists" style="margin-right: 15px; width: 120px; height: 158px; text-overflow: ellipsis; cursor:pointer">
+      <div @click="artistLookup(i.artistId)" v-bind:key="i.artistId" v-for="i in searchResults.artists" style="margin-right: 15px; width: 120px; height: 158px; text-overflow: ellipsis; cursor:pointer">
         <v-avatar size="115px" :tile="false"  class="grey lighten-4">
           <img style="object-fit: cover" :src="i.artistArtRef"/>
         </v-avatar>
@@ -30,7 +30,7 @@
 
     <h2 v-if="rendered && !searching && searchResults.albums && searchResults.albums.length > 0" style="margin-bottom: 5px; margin-top: 15px;">Albums</h2>
     <v-layout v-if="!searching" v-cloak aria-rowindex="" style="overflow-y:hidden; white-space: nowrap">
-      <div @click="albumLookup(i.albumId)" v-for="i in searchResults.albums" style="margin-right: 15px; width: 120px; height: 158px; text-overflow: ellipsis; cursor:pointer">
+      <div @click="albumLookup(i.albumId)" v-bind:key="i.albumId" v-for="i in searchResults.albums" style="margin-right: 15px; width: 120px; height: 158px; text-overflow: ellipsis; cursor:pointer">
         <v-avatar size="115px" :tile="false"  class="grey lighten-4">
           <img style="object-fit: cover" :src="i.albumArtRef"/>
         </v-avatar>
@@ -41,9 +41,9 @@
 
     <h2 v-if="rendered && !searching && searchResults.radios && searchResults.radios.length > 0" style="margin-bottom: 5px; margin-top: 15px;">Stations</h2>
     <v-layout v-if="!searching" v-cloak aria-rowindex="" style="overflow-y:hidden; white-space: nowrap">
-      <div @click="radioLookup(i.albumId)" v-for="i in searchResults.albums" style="margin-right: 15px; width: 120px; height: 158px; text-overflow: ellipsis; cursor:pointer">
+      <div @click="radioLookup(i)" v-for="i in searchResults.radios" style="margin-right: 15px; width: 120px; height: 158px; text-overflow: ellipsis; cursor:pointer">
         <v-avatar size="115px" :tile="false"  class="grey lighten-4">
-          <img style="object-fit: cover" :src="i.albumArtRef"/>
+          <img style="object-fit: cover" :src="i.imageUrls[0].url"/>
         </v-avatar>
         <br>
         <h4 style="overflow:hidden; text-overflow: ellipsis; text-align: center">{{i.name}}</h4>
@@ -104,7 +104,7 @@
           </v-layout>
           <h3 v-if="artistResult.topTracks && artistResult.topTracks.length > 0" style="margin-bottom: 5px">Top Songs</h3>
           <v-layout v-cloak aria-rowindex="" style="overflow-y:hidden; white-space: nowrap">
-            <div v-on:click="selectSong(i)" v-for="i in artistResult.topTracks" style="margin-left: 7px; margin-right: 7px; width: 120px; height: 158px; text-overflow: ellipsis; cursor:pointer">
+            <div v-on:click="selectSong(i)" v-bind:key="i.storeId" v-for="i in artistResult.topTracks" style="margin-left: 7px; margin-right: 7px; width: 120px; height: 158px; text-overflow: ellipsis; cursor:pointer">
               <v-avatar size="100px" :tile="true"  class="grey lighten-4">
                 <img :src="i.albumArtRef[0].url"/>
               </v-avatar>
@@ -116,7 +116,7 @@
 
           <h3 v-if="artistResult.albums && artistResult.albums.length > 0" style="margin-bottom: 5px">Albums</h3>
           <v-layout v-cloak aria-rowindex="" style="overflow-y:hidden; white-space: nowrap">
-            <div v-on:click="albumLookup(i.albumId)" v-for="i in artistResult.albums" style="margin-left: 7px; margin-right: 7px; width: 120px; height: 158px; text-overflow: ellipsis; cursor:pointer">
+            <div v-on:click="albumLookup(i.albumId)" v-bind:key="i.storeId" v-for="i in artistResult.albums" style="margin-left: 7px; margin-right: 7px; width: 120px; height: 158px; text-overflow: ellipsis; cursor:pointer">
               <v-avatar size="100px" :tile="true"  class="grey lighten-4">
                 <img :src="i.albumArtRef"/>
               </v-avatar>
@@ -128,7 +128,7 @@
 
           <h3 v-if="artistResult.related_artists && artistResult.related_artists.length > 0" style="margin-bottom: 5px; margin-top: 15px;">Similar Artists</h3>
           <v-layout v-cloak aria-rowindex="" style="overflow-y:hidden; white-space: nowrap">
-            <div @click="artistLookup(i.artistId)" v-for="i in artistResult.related_artists" style="margin-right: 15px; width: 120px; height: 158px; text-overflow: ellipsis; cursor:pointer">
+            <div @click="artistLookup(i.artistId)" v-bind:key="i.artistId" v-for="i in artistResult.related_artists" style="margin-right: 15px; width: 120px; height: 158px; text-overflow: ellipsis; cursor:pointer">
               <v-avatar size="100px" :tile="false"  class="grey lighten-4">
                 <img style="object-fit: cover" :src="i.artistArtRef"/>
               </v-avatar>
@@ -187,6 +187,33 @@
         <v-card-actions>
           <v-btn color="primary" @click.stop="addAlbumToQueue()">Add Album to Queue<v-icon>queue_music</v-icon></v-btn>
           <v-btn @click.stop="albumDialog=false">Close</v-btn>
+        </v-card-actions>
+      </v-container>
+    </v-card>
+  </v-flex>
+</v-dialog>
+
+<v-dialog v-model="radioDialog" max-width="500px">
+  <v-flex xs12>
+    <v-card v-if="radioResult"  class="white--text">
+      <v-container fluid grid-list-lg>
+        <v-layout column>
+          <v-layout align-center justify-center>
+              <div class="headline">{{radioResult.name}}</div>
+          </v-layout>
+          <v-layout align-center justify-center>
+              <div>Radio Station</div>
+          </v-layout>
+          <v-layout style="padding: 25px" align-center justify-center v-if="radioResult.description">
+              <span>{{radioResult.description}}</span>
+          </v-layout>
+        </v-layout>
+      </v-container>
+      <v-container>
+        <v-card-actions>
+          <v-btn v-if="radioResult && radioResult.seed && radioResult.seed.curatedStationId" color="primary" @click.stop="rad(radioResult.seed.curatedStationId, 'station', radioResult.name)">Set as Radio Station</v-btn>
+          <v-btn v-if="radioResult && radioResult.seed && radioResult.seed.artistId" color="primary" @click.stop="rad(radioResult.seed.artistId, 'artist', radioResult.name)">Set as Artist Radio Station</v-btn>
+          <v-btn @click.stop="radioDialog=false">Close</v-btn>
         </v-card-actions>
       </v-container>
     </v-card>
@@ -259,6 +286,8 @@
           artistResult: {},
           albumResult: {},
           albumDialog: false,
+          radioResult: {},
+          radioDialog: false,
           rendered: true
 
         }},
@@ -360,6 +389,10 @@
             }).catch(e=>{
               console.log(e);
             });
+          },
+          radioLookup: function(id){
+            this.radioResult = id;
+            this.radioDialog = true;
           },
           millisToNorm: function(dur){
             var d = new Date(1000*Math.round(dur/1000));

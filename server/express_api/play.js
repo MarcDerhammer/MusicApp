@@ -184,7 +184,8 @@ var getStation = function(stationId){
                 console.log(err);
                 resolve(null);
             }
-            pm.getStationTracks(stationId, 500, function(err, result){
+            console.log(stationId);
+            pm.getStationTracks(stationId, 25, function(err, result){
                 if(err)console.log(err);
                 resolve(result);
             });
