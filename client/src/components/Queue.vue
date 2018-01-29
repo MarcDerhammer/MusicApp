@@ -12,11 +12,12 @@
                   <span v-if="master" style="font-weight: lighter; font-size: 10px;">You are the audio master and have full control</span>
                   <span v-if="listening && listeners == 2" style="font-weight: lighter; font-size: 10px; display:block">There is {{listeners-1}} other device listening to the stream</span>
                   <span v-if="listening && listeners > 2" style="font-weight: lighter; font-size: 10px; display:block">There are {{listeners-1}} other devices listening to the stream</span>
+                  <span v-if="songProg && songProg.aa" style="font-weight: lighter; font-size: 10px; display:block">Auto-adding from {{songProg.aa}}</span>
                 </v-flex>
               </v-layout>
                 <v-layout row>
-                <v-flex xs12>
-                  <img flex :src="nowPlaying.albumArtRef[0].url" width="100%"/>
+                <v-flex xs12 align-center style="text-align:center">
+                  <img flex style="max-width: 300px;" :src="nowPlaying.albumArtRef[0].url" width="100%"/>
                 </v-flex>
                 </v-layout>
                 <v-layout flex row>

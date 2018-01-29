@@ -3,7 +3,7 @@
         <v-text-field 
           v-model= "searchTerm"
           @input = "editSearch(searchTerm)" 
-          @keyup.enter.native = "sendSearch(searchTerm)"
+          @keydown.enter.native = "sendSearch(searchTerm)"
           autofocus 
           style="margin-top:15px;" 
           label="Search music" 

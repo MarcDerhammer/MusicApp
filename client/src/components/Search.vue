@@ -100,7 +100,7 @@
             </div>
           </v-layout>
           <v-layout align-center justify-center>
-            <v-btn @click="rad(artistResult.artistId)" color="primary">"Radio" Auto-Add this Artist</v-btn>
+            <v-btn @click="rad(artistResult.artistId, 'artist', artistResult.name + ' radio')" color="primary">Set as Radio (Auto-Add)</v-btn>
           </v-layout>
           <h3 v-if="artistResult.topTracks && artistResult.topTracks.length > 0" style="margin-bottom: 5px">Top Songs</h3>
           <v-layout v-cloak aria-rowindex="" style="overflow-y:hidden; white-space: nowrap">
@@ -296,13 +296,17 @@
           var v = this;
           EventBus.$on('search', function(wo){
             v.search(wo);
-          });
+          }.bind(this));
+        },
+        beforeDestroy(){
+          EventBus.$off('search');
         },
         methods: {
-          rad: function(id){
+          rad: function(id, type, name){
             var aa = {
-              type: 'artist',
-              id: id
+              type: type,
+              id: id,
+              name: name
             }
             this.$socket.emit('setAA', aa);
           },

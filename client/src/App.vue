@@ -1,20 +1,10 @@
 <template>
   <v-app dark>
-    <v-toolbar controls fixed app :clipped-left="clipped">
+    <v-toolbar v-if="e1 === 'Search'" controls app :clipped-left="clipped">
       <v-spacer></v-spacer>
-      <audio id="audioId" @error='audioError' title="wahey" ref="audioEl" @ended='songEnded' @timeupdate='onTimeUpdateListener' :src="musicSrc" preload="none" type="audio/mpeg" autobuffer></audio>
       <h2 v-if="e1 !== 'Search'">{{e1}}</h2>
-      <!--<v-btn  @click="joinAudio()" v-if="!listening && e1 !== 'Search'" flat color="blue" >
-        <span>Join Audio</span>
-        <v-icon>volume_up</v-icon>
-      </v-btn>-->
       <SearchBar v-if="e1 === 'Search'"></SearchBar>
       <v-spacer></v-spacer>
-      
-    <!--<v-btn @click="leaveAudio()" v-if="listening" flat color="blue" >
-        <span>Leave Audio</span>
-        <v-icon>volume_off</v-icon>
-      </v-btn>-->
     </v-toolbar>
     <v-content>
       <router-view ref="main" style="margin-bottom: 50px"></router-view>
@@ -32,16 +22,7 @@
         <span>You</span>
         <v-icon>person</v-icon>
       </v-btn>
-      <!--<v-btn v-if="!listening" @click="joinAudio()" color="blue" value="">
-        <v-icon>volume_mute</v-icon>
-      </v-btn>
-      <v-btn v-if="listening && isMaster" @click="leaveAudio()" color="blue" value="">
-        <span>Master</span>
-        <v-icon>volume_up</v-icon>
-      </v-btn>
-      <v-btn v-if="listening && !isMaster" @click="leaveAudio()" color="blue" value="">
-        <v-icon>volume_up</v-icon>
-      </v-btn>-->
+      <audio id="audioId" @error='audioError' title="wahey" ref="audioEl" @ended='songEnded' @timeupdate='onTimeUpdateListener' :src="musicSrc" preload="none" type="audio/mpeg" autobuffer></audio>
     </v-bottom-nav>
     <v-snackbar
       :timeout="snackTimeout"
@@ -106,8 +87,6 @@
         store.commit('LEAVEAUDIO')
         this.$socket.emit('leaveAudio', 'hey');
         this.isMaster = false;
-        //this.$refs.audioEl.pause();
-
       },
       audioError: function(){
         console.log('audio error!!');
@@ -149,14 +128,6 @@
       }
     },
     watch: {
-      /*listening: function(val){
-        if(!val){
-          this.$refs.audioEl.pause();
-        }else{
-          console.log(this.$refs.audioEl);
-          this.$refs.audioEl.play();
-        }
-      },*/
       volume: function(val){
         val /= 100;
         this.$refs.audioEl.volume = val;

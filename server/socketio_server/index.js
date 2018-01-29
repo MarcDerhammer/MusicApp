@@ -155,6 +155,7 @@ io.on('connection', function(socket){
     if(aaStation.id !== data.id || aaStation.type !== data.type){
       aaSongs = [];
     }
+    aaStation.name = data.name;
     aaStation = data;
     writeQueueToFile();
     createStationAndAddSongs(aaStation);
@@ -424,6 +425,9 @@ io.on('connection', function(socket){
         }
         masterProg = prog;
         prog.count = count;
+        if(aaStation && aaStation.name){
+          prog.aa = aaStation.name;
+        }
         io.emit('songProg', prog);
       }else{
         var masterExists = false;
