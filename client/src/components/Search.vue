@@ -8,7 +8,7 @@
     <v-layout v-if="!searching" v-cloak aria-rowindex="" style="overflow-y:hidden; white-space: nowrap">
       <div v-on:click="selectSong(i)" v-bind:key="i.storeId" v-for="i in searchResults.tracks" style="margin-right: 15px; width: 120px; height: 174px; text-overflow: ellipsis; cursor:pointer">
         <v-avatar size="115px" :tile="true"  class="grey lighten-4">
-          <img :src="i.albumArtRef[0].url"/>
+          <img :src="i.albumArtRef && i.albumArtRef[0].url"/>
         </v-avatar>
         <br>
         <h4 style="overflow:hidden; text-overflow: ellipsis">{{i.title}}</h4>
@@ -41,9 +41,9 @@
 
     <h2 v-if="rendered && !searching && searchResults.radios && searchResults.radios.length > 0" style="margin-bottom: 5px; margin-top: 15px;">Stations</h2>
     <v-layout v-if="!searching" v-cloak aria-rowindex="" style="overflow-y:hidden; white-space: nowrap">
-      <div @click="radioLookup(i)" v-for="i in searchResults.radios" style="margin-right: 15px; width: 120px; height: 158px; text-overflow: ellipsis; cursor:pointer">
+      <div @click="radioLookup(i)" v-bind:key="i.kind + i.name" v-for="i in searchResults.radios" style="margin-right: 15px; width: 120px; height: 158px; text-overflow: ellipsis; cursor:pointer">
         <v-avatar size="115px" :tile="false"  class="grey lighten-4">
-          <img style="object-fit: cover" :src="i.imageUrls[0].url"/>
+          <img v-if="i.imageUrls && i.imageUrls[0]" style="object-fit: cover" :src="i.imageUrls[0].url"/>
         </v-avatar>
         <br>
         <h4 style="overflow:hidden; text-overflow: ellipsis; text-align: center">{{i.name}}</h4>

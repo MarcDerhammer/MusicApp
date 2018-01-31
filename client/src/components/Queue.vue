@@ -29,55 +29,29 @@
                   </v-flex>
                 </v-layout>
                 <v-layout row>
-                  <v-icon style="font-size: 12px" @click="downvote(nowPlaying)" class="vote">thumb_down</v-icon>
+                <!--  <v-icon style="font-size: 12px" @click="downvote(nowPlaying)" class="vote">thumb_down</v-icon>-->
                   <v-flex flex="100" align-center style="text-align: center; display: inline block;">
                         <v-icon @click="previous()" class="vote controls">skip_previous</v-icon>
                         <v-icon v-if="!listening" @click="joinAudio()" class="vote controls">play_arrow</v-icon>
                         <v-icon v-if="listening" @click="leaveAudio()" class="vote controls">pause</v-icon>
                         <v-icon @click="remove(nowPlaying)" class="vote">skip_next</v-icon>
                   </v-flex>
-                  <v-icon style="font-size: 12px" @click="downvote(nowPlaying)" class="vote">thumb_up</v-icon>
+                  <!--<v-icon style="font-size: 12px" @click="downvote(nowPlaying)" class="vote">thumb_up</v-icon>-->
                 </v-layout>
-                
-                <v-layout row style="cursor: pointer" middle v-if="listening">
-                      <v-icon @click='unmute()' v-if="volume == 0" style="margin-right: 25px">volume_mute</v-icon>
-                      <v-icon @click='mute()' v-if="volume !== 0" style="margin-right: 25px">volume_up</v-icon>
-                      <v-slider @input='updateVolume()' v-model="volume" step="0"></v-slider>
+                <v-layout style="opacity: .5" row fill-height>
+                      <span style="margin-top: auto">{{timeIn}}</span>
+                      <v-spacer flex v-if="!listening"></v-spacer>
+                      <v-layout v-if="listening">
+                        <v-icon @click='unmute()' v-if="listening && volume == 0" style="margin-right: 25px; cursor:pointer; margin-left: 30px">volume_mute</v-icon>
+                        <v-icon @click='mute()' v-if="listening && volume !== 0" style="margin-right: 25px;cursor:pointer; margin-left: 30px">volume_up</v-icon>
+                        <v-slider v-if="listening" @input='updateVolume()' v-model="volume" step="0" style="cursor:pointer; padding-top: 0px; margin-right: 30px; height: 14px"></v-slider>
+                      </v-layout>
+                      <span style="margin-top: auto" >-{{timeRemaining}}</span>
                 </v-layout>
-                  
-                  <!--<v-layout style="cursor: pointer" row >
-                      <v-icon  @click='setVolume(100)' v-if="listening && volume == 0" style="margin-right: 25px">volume_mute</v-icon>
-                      <v-icon @click='setVolume(0)' v-if="listening && volume !== 0" style="margin-right: 25px">volume_up</v-icon>
-                      <v-slider v-if="listening" @input='updateVolume()' v-model="volume" step="0"></v-slider>
-                      <span v-if="nowPlaying.score > 0" style="color:green; opacity: .75; margin-top: 20px">&nbsp;+{{nowPlaying.score}}</span>
-                      <span v-if="nowPlaying.score < 0" style="color:red; opacity: .75; margin-top: 20px">&nbsp;{{nowPlaying.score}}</span>
-                  </v-layout>-->
-                  
-                    
-                
-              <!--<v-layout row style="curstor:pointer; ">
-                      <v-tooltip top>
-                        <v-btn  slot="activator" flat icon><v-icon @click="downvote(nowPlaying)" class="vote">thumb_down</v-icon></v-btn>
-                        <span>Downvote</span>
-                      </v-tooltip>
-                      <v-tooltip top>
-                        <v-btn slot="activator" flat icon><v-icon @click="upvote(nowPlaying)" class="vote">thumb_up</v-icon></v-btn>
-                        <span>Upvote</span>
-                      </v-tooltip>
-                      <v-tooltip top>
-                        <v-btn slot="activator" flat icon>
-                        <v-icon class="vote">people</v-icon>
-                        <span class="vote">{{listeners}}</span>
-                        </v-btn>
-                        <span>Number of listeners</span>
-                      </v-tooltip>
-                      <v-icon v-if="master" @click="remove(nowPlaying)" class="vote">&nbsp;delete</v-icon>
-                  </v-layout>-->
             </v-container>
             <v-progress-linear id="progBar" style="cursor:pointer; margin-top:0px" @click="clickProg($event)" v-model="songProg"></v-progress-linear>
           </v-card>
         </v-flex>
-        <!--<v-flex><v-btn @click="showQueue()">Queue</v-btn><v-btn @click="showChat()">Chat <span style="color:red" v-if="unreadMessages > 0"> ({{unreadMessages}})</span></v-btn></v-flex>-->
         <v-flex style="width: 500px" xs12 >
           <v-list two-line style="max-width: 500px; ">
             <template v-if="index !== 0" style="max-width: 500px" v-for="(i, index) in queue">
@@ -93,32 +67,24 @@
                 <v-progress-circular indeterminate color="primary" v-if="!i.downloaded"></v-progress-circular>
                 <span v-if="i.score > 0" style="color:green; opacity: .75">&nbsp;+{{i.score}}&nbsp;</span>
                 <span v-if="i.score < 0" style="color:red; opacity: .75">&nbsp;{{i.score}}&nbsp;</span>
-                <!--<v-icon @click="downvote(i)" class="vote">thumb_down</v-icon>&nbsp;&nbsp;
-                <v-icon @click="upvote(i)" class="vote">thumb_up</v-icon>-->
-
                 <v-tooltip top v-if="i.contentType==='1'"> 
                   <span>Explicit</span>
                   <v-btn disabled slot="activator" flat icon>
                     <v-icon >explicit</v-icon>
                   </v-btn>
                 </v-tooltip>
-                
                 <v-tooltip top  v-if="master"> 
                   <span>Remove from Queue</span>
                   <v-btn slot="activator" flat icon>
                     <v-icon @click="remove(i)" class="vote">delete</v-icon>
                   </v-btn>
                 </v-tooltip>
-                
-                
-
                 <v-tooltip top  v-if="i.botAdd"> 
                   <span>Added by bot</span>
                   <v-btn disabled slot="activator" flat icon>
                   <v-icon >storage</v-icon>
                   </v-btn>
-                  </v-tooltip>
-
+                </v-tooltip>
                 <v-tooltip top  v-if="!i.botAdd"> 
                   <span>Added by human</span>
                   <v-btn disabled slot="activator" flat icon>
@@ -162,6 +128,7 @@
 </style>
 <script>
   import store from '../vuex/store'
+  
   export default {
     data () {
       return {
@@ -172,7 +139,9 @@
         snackText: '',
         volume: store.state.volume,
         listeners: 0,
-        lastVol: 100
+        lastVol: 100,
+        timeRemaining: '',
+        timeIn: ''
       }
     },
     computed: {
@@ -192,7 +161,12 @@
         return store.state.master;
       }
     },
-    
+    mounted(){
+      //ugly hack because the stupid slider adds some bullshit... can probably fix with style but whatever
+        if(document.getElementsByClassName("input-group__details") && document.getElementsByClassName("input-group__details")[0]){
+          document.getElementsByClassName("input-group__details")[0].outerHTML = ''
+        }
+    },
     methods: {
       onlyMasterCan(rest){
         this.snackText = "Only the Master audio controller can " + rest;
@@ -212,6 +186,12 @@
         }else{
           this.onlyMasterCan("change song progress");
         }
+      },
+      millisToNorm: function(dur){
+        var d = new Date(1000*Math.round(dur/1000));
+        var mins = d.getUTCMinutes();
+        var secs = d.getUTCSeconds();
+        return mins + ":" + (secs < 10 ? "0" : "") + secs;
       },
       upvote(song){
         song.score++;
@@ -239,6 +219,10 @@
         store.commit('JOINAUDIO', true);
         document.getElementById('audioId').play();
         this.$socket.emit('joinAudio', 'hey');
+        //ugly hack because the stupid slider adds some bullshit... can probably fix with style but whatever
+        if(document.getElementsByClassName("input-group__details") && document.getElementsByClassName("input-group__details")[0]){
+          document.getElementsByClassName("input-group__details")[0].outerHTML = ''
+        }
       },
       leaveAudio(){
         store.commit('LEAVEAUDIO')
@@ -257,6 +241,9 @@
     },
     sockets: {
       songProg: function(data){
+        console.log()
+        this.timeRemaining = this.millisToNorm(this.nowPlaying.durationMillis - data.seconds *1000);
+        this.timeIn = this.millisToNorm(data.seconds *1000);
         this.songProg = data.percentage;
         this.listeners = data.count;
         this.aa = data.aa;

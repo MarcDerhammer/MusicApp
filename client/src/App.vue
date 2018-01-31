@@ -1,6 +1,6 @@
 <template>
   <v-app dark>
-    <v-toolbar v-if="e1 === 'Search'" controls app :clipped-left="clipped">
+    <v-toolbar fixed v-if="e1 === 'Search'" controls app :clipped-left="clipped">
       <v-spacer></v-spacer>
       <h2 v-if="e1 !== 'Search'">{{e1}}</h2>
       <SearchBar v-if="e1 === 'Search'"></SearchBar>
@@ -67,6 +67,8 @@
       musicSrc(){
         var song = store.state.songQueue[0];
         if(song && song.downloaded){
+          window.document.title = song.title + ' - ' + song.artist;
+          
           return 'https://marcderhammer.com/audio/' + song.storeId + ".mp3";
         }
         if(song && !song.downloaded){
