@@ -34,7 +34,7 @@
                         <v-icon @click="previous()" class="vote controls">skip_previous</v-icon>
                         <v-icon v-if="!listening" @click="joinAudio()" class="vote controls">play_arrow</v-icon>
                         <v-icon v-if="listening" @click="leaveAudio()" class="vote controls">pause</v-icon>
-                        <v-icon @click="remove(nowPlaying)" class="vote">skip_next</v-icon>
+                        <v-icon @click="remove(nowPlaying)" class="vote controls">skip_next</v-icon>
                   </v-flex>
                   <!--<v-icon style="font-size: 12px" @click="downvote(nowPlaying)" class="vote">thumb_up</v-icon>-->
                 </v-layout>

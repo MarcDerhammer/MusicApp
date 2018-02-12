@@ -14,9 +14,13 @@
         <span>Queue</span>
         <v-icon>queue_music</v-icon>
       </v-btn>
+      <!--<v-btn flat color="blue" value="Chat" href="#/chat">
+        <span>Chat</span>
+        <v-icon>chat</v-icon>
+      </v-btn>-->
       <v-btn flat color="blue" value="Search" href="#/search">
         <span>Search Music</span>
-        <v-icon>music_note</v-icon>
+        <v-icon>search</v-icon>
       </v-btn>
       <v-btn flat color="blue" value="You" href="#/you">
         <span>You</span>

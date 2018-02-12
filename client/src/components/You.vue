@@ -5,7 +5,7 @@
         <span v-if="!name">Who are you?</span>
         <span v-if="name">You are: </span>
           <v-flex xs12 sm5 >
-          <v-text-field 
+          <v-text-field
             v-model= "name"
             @input = "setName(name)" 
             autofocus 
@@ -14,8 +14,7 @@
             single-line>
           </v-text-field>
           </v-flex>
-        <v-btn @click="ping()">Ping test to Song Queue Server</v-btn>
-        <span>{{pingback}} {{pingtime}} ms</span>
+        <span v-if="name" style="font-weight: light; text-align: center; opacity: .75">Your name will display as <span style="font-weight: bold;">{{name}}</span> when adding songs & chatting</span>
       </v-layout>
     </v-slide-y-transition>
   </v-container>
