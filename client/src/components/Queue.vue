@@ -141,7 +141,8 @@
         listeners: 0,
         lastVol: 100,
         timeRemaining: '',
-        timeIn: ''
+        timeIn: '',
+        noSleep: {}
       }
     },
     computed: {
@@ -166,6 +167,7 @@
         if(document.getElementsByClassName("input-group__details") && document.getElementsByClassName("input-group__details")[0]){
           document.getElementsByClassName("input-group__details")[0].outerHTML = ''
         }
+        this.noSleep = new NoSleep();
     },
     methods: {
       onlyMasterCan(rest){
@@ -223,11 +225,13 @@
         if(document.getElementsByClassName("input-group__details") && document.getElementsByClassName("input-group__details")[0]){
           document.getElementsByClassName("input-group__details")[0].outerHTML = ''
         }
+        this.noSleep.enable();
       },
       leaveAudio(){
         store.commit('LEAVEAUDIO')
         this.$socket.emit('leaveAudio', 'hey');
         document.getElementById('audioId').pause();
+        this.noSleep.disable();
       },
       clickProg(event){
         //EventBus.$emit('setProgress', event.offsetX/document.getElementById("progBar").offsetWidth);
