@@ -13,6 +13,11 @@ Vue.use(Vuetify)
 Vue.use(VueSocketio, "https://marcderhammer.com:3001");
 Vue.config.productionTip = false
 
+if(!!window.navigator.userAgent.match(/MSIE|Trident/)){
+  alert('Stop using Internet Explorer.. site won\'t work... \nuse Chrome or Safari or Firefox.. c\'mon it\'s ' + new Date().getFullYear());
+  window.location.href="https://www.google.com/chrome/";
+}
+
 /* eslint-disable no-new */
 var vm = new Vue({
   store,
