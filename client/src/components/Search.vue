@@ -409,9 +409,10 @@
             
             var album = this.albumResult;
             var socket = this.$socket;
+            var user = this.user;
             album.tracks.forEach(function(obj){
                 obj.isAlbum = true;
-                obj.user = this.user;
+                obj.user = user;
                 socket.emit('addSongToQueue', obj);
             });
           }

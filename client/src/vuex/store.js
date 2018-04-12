@@ -23,6 +23,13 @@ const store = new Vuex.Store({
     UPDATESONGQUEUE(state, queue){
       state.songQueue = queue;
     },
+    UPDATEUSERINFO(state, userinfo){
+      state.songQueue.forEach(function(obj){
+        if(obj.user && obj.user.id == userinfo.id){
+          obj.user = userinfo;
+        }
+      });
+    },
     UPDATEUSER(state, user){
       localStorage.setItem('user', JSON.stringify(user));
       state.user = user;

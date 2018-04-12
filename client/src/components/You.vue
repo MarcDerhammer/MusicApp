@@ -7,7 +7,7 @@
             <!--todo.. fix the first keypress issue thing..-->
           <v-text-field 
             required
-            maxlength="15"
+            maxlength="30"
             v-model= "user.name"
             @input = "setName()" 
             label="Enter your name" 
@@ -61,6 +61,9 @@ export default {
   computed: {
     user() {
       return store.state.user;
+    },
+    queue(){
+      return store.state.queue;
     }
   },
   methods: {
@@ -72,6 +75,7 @@ export default {
     setName: function() {
       if (this.user.name) store.commit("UPDATEUSER", this.user);
       this.$socket.emit("userInfoChanged", this.user);
+      store.commit('UPDATEUSERINFO', this.user);
     }
   },
   sockets: {

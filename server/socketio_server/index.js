@@ -41,6 +41,14 @@ readFromFile = function(){
   });
 }
 
+syncUpUserInfo = function(user){
+  songQueue.forEach(function(obj){
+    if(obj.user && obj.user.id && obj.user.id == user.id){
+      obj.user = user;
+    }
+  });
+}
+
 downloadInOrder = function(){
   if(!downloadInProgress){
     downloadInProgress = true;
@@ -438,6 +446,9 @@ io.on('connection', function(socket){
   socket.on('addSongToQueue', function(msg){
     tsLog('song received');
     var alreadyQueued= false;
+    if(msg.user){
+      syncUpUserInfo(msg.user);
+    }
     songQueue.forEach(function(obj){
       if(obj.storeId === msg.storeId){
         alreadyQueued = true;
@@ -548,6 +559,11 @@ io.on('connection', function(socket){
 
   socket.on('pinger', function(msg){
     socket.emit('pingback', 'whatup');
+  });
+
+  socket.on('userInfoChanged', function(msg){
+    syncUpUserInfo(msg);
+    io.emit('userOnly', msg);
   });
 });
 
