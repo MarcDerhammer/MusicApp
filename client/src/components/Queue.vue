@@ -55,7 +55,7 @@
         <v-flex style="width: 500px" xs12 >
           <v-list two-line style="max-width: 500px; ">
             <template v-if="index !== 0" style="max-width: 500px" v-for="(i, index) in queue">
-              <v-list-tile avatar v-bind:key="i.nid" >
+              <v-list-tile v-bind:style="{'background-color': (i.user ? i.user.color : '')}" avatar v-bind:key="i.nid" >
                 <v-list-tile-avatar>
                   <img v-bind:src="i.albumArtRef[0].url">
                 </v-list-tile-avatar>
@@ -88,7 +88,7 @@
                 <v-tooltip top  v-if="!i.botAdd"> 
                   <span>Added by {{i.user.name}}</span>
                   <v-btn disabled slot="activator" flat icon>
-                  <v-icon >person</v-icon>
+                  <v-icon>person </v-icon>
                   </v-btn>
                   </v-tooltip>
               </v-list-tile>
@@ -248,6 +248,14 @@
         this.songProg = data.percentage;
         this.listeners = data.count;
         this.aa = data.aa;
+      },
+      userOnly: function(data){
+        console.log('ok');
+        this.queue.forEach(function(element){
+          if(element.user && element.user.id == data.id){
+            element.user = data;
+          }
+        });
       }
     },
     watch: {
