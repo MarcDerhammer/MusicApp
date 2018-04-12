@@ -85,7 +85,7 @@
                   <v-icon >storage</v-icon>
                   </v-btn>
                 </v-tooltip>
-                <v-tooltip top  v-if="!i.botAdd"> 
+                <v-tooltip top  v-if="!i.botAdd && i.user && i.user.name"> 
                   <span>Added by {{i.user.name}}</span>
                   <v-btn disabled slot="activator" flat icon>
                   <v-icon>person </v-icon>

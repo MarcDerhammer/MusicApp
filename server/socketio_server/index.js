@@ -89,11 +89,11 @@ downloadInOrder = function(){
               var myLastQueue = 0;
               for(var i = 0; i < songQueue.length; i++){
                 var theSong = songQueue[i];
-                if(theSong.user && theSong.user.id && theSong.downloaded && theSong.user.id == song.user.id){
+                if(theSong.user && theSong.user.id && theSong.downloaded && song.user && song.user.id && theSong.user.id == song.user.id){
                     myLastQueue = i;                   
                 }
               }
-              console.log(song.user.id + ' last queue was ' + myLastQueue);
+              //console.log(song.user.id + ' last queue was ' + myLastQueue);
               to = myLastQueue;
               var usersWhoQueued = [];
               for(var i = myLastQueue; i < songQueue.length; i++){
@@ -192,7 +192,18 @@ io.on('connection', function(socket){
       });
 
       response.on('end', function(){
-        var dat = JSON.parse(body);
+        var failed= false;
+        var dat = {};
+        try{
+          dat = JSON.parse(body);
+        }catch(err){
+          failed = true;
+          console.log(err);
+        }
+        if(failed){
+          return;
+        }
+
         var tracks = dat.data.stations[0].tracks;
         tracks.forEach(function(newTrack){
           newTrack.botAdd = true;
@@ -541,6 +552,9 @@ io.on('connection', function(socket){
               var s = io.sockets.connected[i];
               s.master = false;
             }
+            socket.master = true;
+            socket.listening = true;
+            socket.emit("newMaster", true);
           }
         }
       }
