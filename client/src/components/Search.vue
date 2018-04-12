@@ -262,15 +262,6 @@
     
     export default {
         data () {
-          var stored = localStorage.getItem("Name");
-          if(stored){
-            name = stored;
-            store.commit('CHANGEUSER', name);
-          }else{
-            name = '';
-            store.commit('CHANGEUSER', name);
-          }
-          
           return {
           searching: false,
           selectedSong: {},
@@ -295,8 +286,8 @@
             searchTerm () {
               return store.state.searchTerm
             },
-            userName(){
-              return store.state.userName;
+            user(){
+              return store.state.user;
             },
             master(){
               return store.state.master;
@@ -410,10 +401,7 @@
           },
           addToQueue(){
             var song = this.selectedSong;
-            if(this.userName){
-              console.log('setting username to ' + this.userName);
-              song.user = this.userName;
-            }
+            song.user = this.user;
             this.$socket.emit('addSongToQueue', song);
             this.dialog3 = false;
           },
@@ -421,12 +409,10 @@
             
             var album = this.albumResult;
             var socket = this.$socket;
-            var username = this.userName;
             album.tracks.forEach(function(obj){
-              if(username){
-                obj.user = username;
-              }
-              socket.emit('addSongToQueue', obj);
+                obj.isAlbum = true;
+                obj.user = this.user;
+                socket.emit('addSongToQueue', obj);
             });
           }
         }

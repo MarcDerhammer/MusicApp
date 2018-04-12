@@ -23,7 +23,8 @@
         <v-icon>search</v-icon>
       </v-btn>
       <v-btn flat color="blue" value="You" href="#/you">
-        <span>You</span>
+        <span v-if="user.name.includes('Anonymous')">Change Name</span>
+        <span v-if="!user.name.includes('Anonymous')">{{user.name}}</span>
         <v-icon>person</v-icon>
       </v-btn>
       <audio id="audioId" @error='audioError' title="wahey" ref="audioEl" @ended='songEnded' @timeupdate='onTimeUpdateListener' :src="musicSrc" preload="none" type="audio/mpeg" autobuffer></audio>
@@ -46,6 +47,26 @@
   import store from './vuex/store'
   import axios from 'axios'
   import Vue from 'Vue'
+
+  //yes i know this is idiotic
+  if(!store.state.user || !store.state.user.name || !store.state.user.id){
+    var user = JSON.parse(localStorage.getItem('user'));
+    if(user){
+      console.log("welcome back " + user.name);
+      if(!user.id){
+        user.id = Math.floor(Math.random() * 1000000000);
+      }
+      if(!user.name){
+        user.name = "Anonymous" + Math.floor(Math.random() * 1000);  
+      }
+    }else{
+      var user = {};
+      user.name = "Anonymous" + Math.floor(Math.random() * 1000);
+      user.id = Math.floor(Math.random() * 1000000000);
+    }
+    store.commit('UPDATEUSER', user);
+  }
+
   window.EventBus = new Vue();
   export default {
     data () {
@@ -64,6 +85,9 @@
     computed: {
       listening(){
         return store.state.listening;
+      },
+      user(){
+        return store.state.user;
       },
       volume(){
         return store.state.volume;

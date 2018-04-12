@@ -6,7 +6,7 @@ Basically, a jukebox app which has two main features:
 * Users can "join" the audio to have a synchronized listening experience
 
 ### Front end
-* VueJS (with Veutify style) 
+* VueJS (with Vuetify style) 
 * I just used the PWA template and built off that.  Super easy and fun.  
 
 ### Backend
@@ -30,5 +30,5 @@ Basically, a jukebox app which has two main features:
  
  
  ##Todo:
- * Better "radio" currently only artist stations can auto-add
+ * Better "radio" currently only artist stations and actual gmusic stations can auto-add
  * Fix upvote/downvote thing... should they change order?  Maybe

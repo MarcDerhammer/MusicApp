@@ -24,7 +24,7 @@
                     <h3>{{nowPlaying.title}}</h3>
                     <h4 style="font-weight: lighter">{{nowPlaying.artist}}</h4>
                     <h4 style="font-weight: lighter; opacity: .8">{{nowPlaying.album}} ({{nowPlaying.year}})<v-icon v-if="nowPlaying.contentType==='1'">explicit</v-icon></h4>
-                    <h6 v-if="nowPlaying.user" style="opacity: .5; font-weight: lighter">Queued by {{nowPlaying.user}}</h6>
+                    <h6 v-if="nowPlaying.user && nowPlaying.user.name" style="opacity: .5; font-weight: lighter">Queued by {{nowPlaying.user.name}}</h6>
                     <h6 v-if="nowPlaying.botAdd" style="opacity: .5; font-weight: lighter">Auto-added by the server</h6>
                   </v-flex>
                 </v-layout>
@@ -86,7 +86,7 @@
                   </v-btn>
                 </v-tooltip>
                 <v-tooltip top  v-if="!i.botAdd"> 
-                  <span>Added by human</span>
+                  <span>Added by {{i.user.name}}</span>
                   <v-btn disabled slot="activator" flat icon>
                   <v-icon >person</v-icon>
                   </v-btn>
@@ -154,9 +154,6 @@
       },
       listening(){
         return store.state.listening;
-      },
-      username(){
-        return store.state.userName;
       },
       master(){
         return store.state.master;

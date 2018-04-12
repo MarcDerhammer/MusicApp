@@ -8,7 +8,7 @@ const store = new Vuex.Store({
     searchTerm: '',
     searchResults: {},
     songQueue: [],
-    userName: '',
+    user: {},
     listening: false,
     volume: 50,
     master: false
@@ -23,9 +23,14 @@ const store = new Vuex.Store({
     UPDATESONGQUEUE(state, queue){
       state.songQueue = queue;
     },
-    CHANGEUSER(state, name){
-      state.userName = name;
+    UPDATEUSER(state, user){
+      localStorage.setItem('user', JSON.stringify(user));
+      state.user = user;
+      console.log('Updated user to ' + user.name + " : " + user.id);
     },
+    /*CHANGEUSER(state, name){
+      state.userName = name;
+    },*/
     JOINAUDIO(state, val){
       state.listening = true;
     },
