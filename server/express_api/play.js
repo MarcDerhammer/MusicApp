@@ -109,7 +109,9 @@ var artistLookup = function(artistId){
                 }
                 if(artistInfo.albums){
                     artistInfo.albums.forEach(function(obj){
-                        obj.albumArtRef = obj.albumArtRef.replace('http://', 'https://');
+                        if(obj.albumArtRef){
+                            obj.albumArtRef = obj.albumArtRef.replace('http://', 'https://');
+                        }
                     });
                 }
                 if(artistInfo.topTracks){
@@ -185,7 +187,7 @@ var getStation = function(stationId){
                 resolve(null);
             }
             console.log(stationId);
-            pm.getStationTracks(stationId, 25, function(err, result){
+            pm.getStationTracks(stationId, 10, function(err, result){
                 if(err)console.log(err);
                 resolve(result);
             });

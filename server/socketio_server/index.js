@@ -3,6 +3,12 @@ var https = require('https');
 var fs = require( 'fs' );
 var downloadInProgress = false;
 var stationCreateAttempts = 0;
+
+function tsLog(text){
+  var ts = '[' + new Date().toString().substring(0, 24) + '] ';
+  console.log(ts + text);
+}
+
 writeQueueToFile = function(){
   fs.writeFileSync('/usr/share/nginx/html/queue.json', JSON.stringify(songQueue), 'utf8');
   fs.writeFileSync('/usr/share/nginx/html/queueAA.json', JSON.stringify(aaSongs), 'utf8');
@@ -10,10 +16,10 @@ writeQueueToFile = function(){
 }
 
 readFromFile = function(){
-  console.log('attempting read');
+  tsLog('attempting read');
   fs.readFile('/usr/share/nginx/html/queue.json', 'utf8', function readFile(err, data){
     if(err){
-      console.log(err);
+      tsLog(err);
     }else{
       songQueue = JSON.parse(data);
       downloadInOrder();
@@ -21,14 +27,14 @@ readFromFile = function(){
   });
   fs.readFile('/usr/share/nginx/html/queueAA.json', 'utf8', function readFile(err, data){
     if(err){
-      console.log(err);
+      tsLog(err);
     }else{
       aaSongs = JSON.parse(data);
     }
   });
   fs.readFile('/usr/share/nginx/html/AASettings.json', 'utf8', function readFile(err, data){
     if(err){
-      console.log(err);
+      tsLog(err);
     }else{
       aaStation = JSON.parse(data);
     }
@@ -46,18 +52,70 @@ downloadInOrder = function(){
       }
     });
     if(song !== null){
-      console.log('attempting to download ' + song.storeId);
+      //tsLog('attempting to download ' + song.storeId);
       https.get('https://marcderhammer.com/api/downloadStream/' + song.storeId, function(response){
         response.setEncoding('utf8');
         response.on('data', function(data){
           if(data === song.storeId){
-            console.log('Download success for ' + song.storeId);
+            //tsLog('Download success for ' + song.storeId);
+            var wasBotAdd = false;
             songQueue.forEach(function(obj2){
               if(song.storeId === song.storeId){
-                song.downloaded = true;
+                //song.downloaded = true;
+                wasBotAdd = song.botAdd;
                 return;
               }
             });
+            
+            if(!wasBotAdd){
+              //lets move it up in queue.... first
+              var from = 0;
+              var to = 0;
+              for(var i = 0; i < songQueue.length; i++){
+                var theSong = songQueue[i];
+                if(theSong.storeId === song.storeId){
+                  from = i;
+                }
+              }
+
+              var myLastQueue = 0;
+              for(var i = 0; i < songQueue.length; i++){
+                var theSong = songQueue[i];
+                if(theSong.user && theSong.user.id && theSong.downloaded && theSong.user.id == song.user.id){
+                    myLastQueue = i;                   
+                }
+              }
+              console.log(song.user.id + ' last queue was ' + myLastQueue);
+              to = myLastQueue;
+              var usersWhoQueued = [];
+              for(var i = myLastQueue; i < songQueue.length; i++){
+                var theSong = songQueue[i];
+                if(!theSong.user){
+                  if(to > 0)
+                    to = i-1;
+                  i = songQueue.length;
+                }
+                if(theSong.user && theSong.user.id && theSong.downloaded){
+                  if(!usersWhoQueued.includes(theSong.user.id)){
+                    usersWhoQueued.push(theSong.user.id);
+                    to++;
+                  }else{
+                    //Found first repeat!
+                    if(to > 0)
+                      to = i-1;
+                    console.log('set to ' + to);
+                    i = songQueue.length;
+                  }
+                }
+              }
+
+              if(to+1 <= songQueue.length){
+                to++;
+                songQueue.splice(to, 0, songQueue.splice(from, 1)[0]);
+              }
+            }
+
+            song.downloaded = true;
             downloadInProgress = false;
             downloadInOrder();
             writeQueueToFile();
@@ -66,10 +124,11 @@ downloadInOrder = function(){
             return;
           }else{
             for(var i = 0; i < songQueue.length; i++){
-              if(songQueue[i].storeId === id){
+              if(songQueue[i].storeId === song.storeId){
                 songQueue.splice(i, 1);
                 writeQueueToFile();
-                console.log('download FAILED for ' + obj.storeId);
+                tsLog('download FAILED for ' + song.storeId);
+                downloadInProgress = false;
                 io.emit('songQueue', songQueue);
                 if(i ==0){
                   io.emit('playNextSong', 'yea');
@@ -82,7 +141,7 @@ downloadInOrder = function(){
         });
       });
     }else{
-      console.log('Downloads must be complete!');
+      //tsLog('Downloads must be complete!');
       downloadInProgress = false;
     }
   }
@@ -110,7 +169,11 @@ app.get('/', function(req, res){
 });
 
 io.on('connection', function(socket){
-  console.log('Someone connected');
+  if(socket.request.connection.remoteAddress){
+    tsLog('Someone connected: ' + socket.request.connection.remoteAddress);
+  }else{
+    tsLog('Someone connected but I don\'t know their IP');
+  }
 
   function createStationAndAddSongs(data){
     stationCreateAttempts++;
@@ -145,13 +208,14 @@ io.on('connection', function(socket){
             stationCreateAttempts = 0;
           }
         });
-        console.log(aaSongs.length);
+        tsLog(aaSongs.length);
         botAddSongToQueue();
       });
     });
   }
 
   socket.on('setAA', function(data){
+    tsLog('new AA set: ' + data);
     if(aaStation.id !== data.id || aaStation.type !== data.type){
       aaSongs = [];
     }
@@ -162,7 +226,7 @@ io.on('connection', function(socket){
   });
 
   socket.on('joinAudio', function(){
-    console.log('someone joined audio');
+    tsLog('someone joined audio');
     socket.listening = true;
     var masterExists = false;
     for (var i in io.sockets.connected) {
@@ -176,13 +240,13 @@ io.on('connection', function(socket){
     if(!masterExists){
       socket.master = true;
       socket.emit("newMaster", true);
-      console.log("There was no master so this is now the master");
+      tsLog("There was no master so this is now the master");
     }
     socket.emit("master", socket.master == true);
   });
 
   socket.on('leaveAudio', function(){
-    console.log('someone is leaving audio');
+    tsLog('someone is leaving audio');
     socket.listening = false;
     socket.master = false;
 
@@ -201,7 +265,7 @@ io.on('connection', function(socket){
         if(s.listening){
           s.master=true;
           s.emit("newMaster", true);
-          console.log('new master selected');
+          tsLog('new master selected');
           return;
         }
       }
@@ -213,6 +277,7 @@ io.on('connection', function(socket){
       for(var i = 0; i < songQueue.length; i++){
         if(songQueue[i].storeId === id){
           songQueue.splice(i, 1);
+          botAddSongToQueue();
           writeQueueToFile();
           io.emit('songQueue', songQueue);
           if(i ==0){
@@ -231,7 +296,6 @@ io.on('connection', function(socket){
       var songDuration = songQueue[0].durationMillis/1000; 
       var percentage = data;
       var setToTimeInSeconds = songDuration*(1-(1-percentage));
-      console.log("i should set to " + setToTimeInSeconds);
       var prog = {
         seconds: setToTimeInSeconds,
         percentage: data*100,
@@ -248,7 +312,11 @@ io.on('connection', function(socket){
   });
 
   socket.on('disconnect', function(){
-    console.log('Someone disconnected');
+    if(socket.request.connection.remoteAddress){
+      tsLog('Someone disconnected: ' + socket.request.connection.remoteAddress);
+    }else{
+      tsLog('Someone disconnected but I don\'t know their IP');
+    }
     socket.listening = false;
     socket.master = false;
 
@@ -267,7 +335,7 @@ io.on('connection', function(socket){
         if(s.listening){
           s.master=true;
           s.emit("newMaster", true);
-          console.log('new master selected');
+          tsLog('new master selected');
           return;
         }
       }
@@ -356,10 +424,10 @@ io.on('connection', function(socket){
       });
       if(!oneWasAdded){
         if(stationCreateAttempts < 15){
-          console.log('station was exhausted.. making a new one!');
+          tsLog('station was exhausted.. making a new one!');
           createStationAndAddSongs(aaStation);
           }else{
-            console.log('you must have listened to all the possible station songs.. i cant get any new ones.. or somethings broken');
+            tsLog('you must have listened to all the possible station songs.. i cant get any new ones.. or somethings broken');
           }
       }else{
         botAddSongToQueue()
@@ -368,7 +436,7 @@ io.on('connection', function(socket){
   };
 
   socket.on('addSongToQueue', function(msg){
-    console.log('song received');
+    tsLog('song received');
     var alreadyQueued= false;
     songQueue.forEach(function(obj){
       if(obj.storeId === msg.storeId){
@@ -414,7 +482,7 @@ io.on('connection', function(socket){
           id: socket.id
         }
 
-        botAddSongToQueue();
+        //botAddSongToQueue();
 
         var count = 0;
         for (var i in io.sockets.connected) {
@@ -441,7 +509,7 @@ io.on('connection', function(socket){
     
         if(!masterExists && socket.listening){
           socket.master = true;
-          console.log('a master has been chosen');
+          tsLog('a master has been chosen');
           socket.emit("newMaster", true);
           var percentage = (data.prog * 1000)/songQueue[0].durationMillis;
           percentage *= 100;
@@ -457,7 +525,7 @@ io.on('connection', function(socket){
           masterProg = prog;
         }else{
           if(!masterProg || !masterProg.time || now - masterProg.time > 10000){
-            console.log("'master' is too far behind... clearing masters");
+            tsLog("'master' is too far behind... clearing masters");
             for (var i in io.sockets.connected) {
               var s = io.sockets.connected[i];
               s.master = false;
@@ -471,6 +539,7 @@ io.on('connection', function(socket){
   socket.on('songEnded', function(data){
     if(socket.master){
       songQueue.shift();
+      botAddSongToQueue();
       io.emit('songQueue', songQueue);
       io.emit('playNextSong', 'yea');
       writeQueueToFile();
@@ -483,5 +552,5 @@ io.on('connection', function(socket){
 });
 
 server.listen(3001, function(){
-  console.log('listening on *:3001');
+  tsLog('listening on *:3001');
 });
