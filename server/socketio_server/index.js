@@ -291,10 +291,10 @@ io.on('connection', function(socket){
     }
   });
 
-  socket.on('removeFromQueue', function(id){
-    if(socket.master){
+  socket.on('removeFromQueue', function(data){
       for(var i = 0; i < songQueue.length; i++){
-        if(songQueue[i].storeId === id){
+        if(songQueue[i].storeId === data.song){
+          if(socket.master || (songQueue[i].user && songQueue[i].user.id == data.user)){
           songQueue.splice(i, 1);
           botAddSongToQueue();
           writeQueueToFile();
@@ -304,8 +304,8 @@ io.on('connection', function(socket){
           }
           break;
         }
+        }
       }
-    }
   });
 
   socket.on('masterSetProg', function(data){
@@ -504,8 +504,6 @@ io.on('connection', function(socket){
           id: socket.id
         }
 
-        //botAddSongToQueue();
-
         var count = 0;
         for (var i in io.sockets.connected) {
           var s = io.sockets.connected[i];
@@ -519,6 +517,13 @@ io.on('connection', function(socket){
           prog.aa = aaStation.name;
         }
         io.emit('songProg', prog);
+        for (var i in io.sockets.connected) {
+          var s = io.sockets.connected[i];
+          if(s.master && s.id != socket.id){
+            s.master == false;
+            console.log('this guy shouldn\'t have been master.. clearing him?');     
+          }
+        }
       }else{
         var masterExists = false;
         for (var i in io.sockets.connected) {
@@ -546,7 +551,7 @@ io.on('connection', function(socket){
 
           masterProg = prog;
         }else{
-          if(!masterProg || !masterProg.time || now - masterProg.time > 10000){
+          if(!masterProg || !masterProg.time || now - masterProg.time > 3000){
             tsLog("'master' is too far behind... clearing masters");
             for (var i in io.sockets.connected) {
               var s = io.sockets.connected[i];

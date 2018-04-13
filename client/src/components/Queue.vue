@@ -3,7 +3,7 @@
     <v-slide-y-transition mode="out-in">
       <v-layout column align-center>
         <v-flex style="width: 500px" v-if="nowPlaying" xs12>
-          <v-card class="white--text">
+          <v-card   class="white--text">
             <v-container style="padding-bottom: 6px; padding-top: 6px">
               <v-layout style="margin-bottom: 8px;" row>
                 <v-flex flex align-center style="text-align:center">
@@ -49,7 +49,7 @@
                       <span style="margin-top: auto" >-{{timeRemaining}}</span>
                 </v-layout>
             </v-container>
-            <v-progress-linear id="progBar" style="cursor:pointer; margin-top:0px" @click="clickProg($event)" v-model="songProg"></v-progress-linear>
+            <v-progress-linear id="progBar"  style="cursor:pointer; margin-top:0px" @click="clickProg($event)" v-model="songProg"></v-progress-linear>
           </v-card>
         </v-flex>
         <v-flex style="width: 500px" xs12 >
@@ -73,7 +73,7 @@
                     <v-icon >explicit</v-icon>
                   </v-btn>
                 </v-tooltip>
-                <v-tooltip top  v-if="master"> 
+                <v-tooltip top  v-if="master || (i.user && i.user.id === user.id)"> 
                   <span>Remove from Queue</span>
                   <v-btn slot="activator" flat icon>
                     <v-icon @click="remove(i)" class="vote">delete</v-icon>
@@ -157,6 +157,9 @@
       },
       master(){
         return store.state.master;
+      },
+      user(){
+        return store.state.user;
       }
     },
     mounted(){
@@ -172,12 +175,13 @@
         this.snackbar = true;
       },
       remove(song){
-        if(!this.master){
-          this.onlyMasterCan("skip songs");
-          this.$socket.emit('removeFromQueue', song.storeId);
-        }else{
-          this.$socket.emit('removeFromQueue', song.storeId);
-        }
+        if(!this.master && (song.user && song.user.id != this.user.id))
+          this.onlyMasterCan("skip songs which he or she did not queue");
+        var payload = {
+          song: song.storeId,
+          user: this.user.id
+        };
+        this.$socket.emit('removeFromQueue', payload);
       },
       previous(){
         if(this.master){

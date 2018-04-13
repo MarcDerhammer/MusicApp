@@ -18,7 +18,7 @@
           </v-text-field>
           </v-flex>
           <span>Select Color</span>
-          <swatches @input="setName()" show-border v-on:click="setName()" style="max-width: 500px" inline  colors="material-dark" v-model="user.color" />
+          <swatches @input="setName()" show-border v-on:click="setName()" style="max-width: 500px; " inline  colors="material-dark" v-model="user.color" />
           <span v-if="user.name" style="font-weight: light; text-align: center; opacity: .75">Songs you queue will look like this:</span>
 
 <v-flex style="width: 500px" xs12 >
@@ -72,7 +72,23 @@ export default {
       this.$socket.emit("pinger", "no");
       this.$socket.emit("songProgUpdate", 75);
     },
+    hexToRgbA(hex){
+        var c;
+        if(/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)){
+            c= hex.substring(1).split('');
+            if(c.length== 3){
+                c= [c[0], c[0], c[1], c[1], c[2], c[2]];
+            }
+            c= '0x'+c.join('');
+            return 'rgba('+[(c>>16)&255, (c>>8)&255, c&255].join(',')+',.3)';
+        }
+        throw new Error('Bad Hex');
+      },
     setName: function() {
+      if(this.user.color){
+        console.log(this.hexToRgbA(this.user.color));
+        this.user.color = this.hexToRgbA(this.user.color);
+      }
       if (this.user.name) store.commit("UPDATEUSER", this.user);
       this.$socket.emit("userInfoChanged", this.user);
       store.commit('UPDATEUSERINFO', this.user);
@@ -86,3 +102,8 @@ export default {
   }
 };
 </script>
+<style>
+.vue-swatches__container{
+  background-color: rgba(0,0,0,0) !important;
+}
+</style>
