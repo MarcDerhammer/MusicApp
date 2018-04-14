@@ -1,5 +1,5 @@
 <template>
-  <v-container fluid style="padding: 0px">
+  <v-container fluid style="padding: 15px;">
     <v-layout align-center justify-center>
       <v-progress-circular class="text-md-center" align-center v-if="searching" indeterminate v-bind:size="75" color="primary"></v-progress-circular>
     </v-layout>
