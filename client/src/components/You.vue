@@ -85,8 +85,7 @@ export default {
         throw new Error('Bad Hex');
       },
     setName: function() {
-      if(this.user.color){
-        console.log(this.hexToRgbA(this.user.color));
+      if(this.user.color && this.user.color.includes("#")){
         this.user.color = this.hexToRgbA(this.user.color);
       }
       if (this.user.name) store.commit("UPDATEUSER", this.user);

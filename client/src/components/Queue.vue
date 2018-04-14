@@ -314,6 +314,13 @@
           if(element.user && element.user.id == data.id){
             element.user = data;
           }
+          if(element.likes){
+            element.likes.forEach(function(obj){
+              if(obj.id === data.id){
+                obj.name = data.name;
+              }
+            });
+          }
         });
       }
     },

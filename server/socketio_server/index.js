@@ -46,6 +46,13 @@ syncUpUserInfo = function(user){
     if(obj.user && obj.user.id && obj.user.id == user.id){
       obj.user = user;
     }
+    if(obj.likes){
+      obj.likes.forEach(function(like){
+        if(like.id === user.id){
+          like.name = user.name;
+        }
+      });
+    }
   });
 }
 
