@@ -28,7 +28,11 @@ const store = new Vuex.Store({
         }
       });
       wasExpanded.forEach(function(obj){
-        queue.find(x=>x.storeId== obj).expanded = true;
+        queue.forEach(function(obj2){
+          if(obj2.storeId == obj){
+            obj2.expanded = true;
+          }
+        })
       });
       state.songQueue = queue;
     },

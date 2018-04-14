@@ -43,22 +43,22 @@
                 <v-tooltip top v-if="!nowPlaying.likes || !nowPlaying.likes.find(x=>x.id== user.id)"> 
                   <span>Like</span>
                   <v-btn @click="addLike(nowPlaying)" slot="activator" flat icon style="margin:0px">
-                  <v-icon >favorite_outline</v-icon><span v-if="nowPlaying.likes && nowPlaying.likes.length > 0">{{nowPlaying.likes.length}}</span>
+                  <v-icon style="opacity: .3" >favorite_outline</v-icon><span v-if="nowPlaying.likes && nowPlaying.likes.length > 0">{{nowPlaying.likes.length}}</span>
                   </v-btn>
                 </v-tooltip>
-                <v-tooltip top v-if="nowPlaying.likes && nowPlaying.likes.find(x=>x.id== user.id)"> 
+                <!--<v-tooltip top v-if="nowPlaying.likes && nowPlaying.likes.find(x=>x.id== user.id)"> 
                   <span>Un-Like</span>
                   <v-btn @click="addLike(nowPlaying)" slot="activator" flat icon style="margin:0px">
-                  <v-icon color="red">favorite</v-icon><span v-if="nowPlaying.likes && nowPlaying.likes.length > 0">{{nowPlaying.likes.length}}</span>
+                  <v-icon color="red" class="heart">favorite</v-icon><span v-if="nowPlaying.likes && nowPlaying.likes.length > 0">{{nowPlaying.likes.length}}</span>
                   </v-btn>
-                </v-tooltip>
+                </v-tooltip>-->
                 </v-flex>
                 
                 </v-layout>
 
                 <v-layout row>
                   <v-flex flex="100" align-center style="text-align: center; display: inline block;">
-                <div style="text-align: center" v-if="nowPlaying.likes && nowPlaying.likes.length > 0"><v-icon color="red">favorite </v-icon><span> by </span><span  v-for="(l, index2) in nowPlaying.likes" v-bind:key=(index2)>{{l.name}}{{index2 == nowPlaying.likes.length-1 ? '' : ', '}}</span></div>
+                <div style="text-align: center" v-if="nowPlaying.likes && nowPlaying.likes.length > 0"><v-icon @click="addLike(nowPlaying)" v-bind:class="{'heart': nowPlaying.likes && nowPlaying.likes.length == 0,'heart1': nowPlaying.likes && nowPlaying.likes.length == 1,'heart2': nowPlaying.likes && nowPlaying.likes.length == 2,'heart3': nowPlaying.likes && nowPlaying.likes.length == 3,'heart4': nowPlaying.likes && nowPlaying.likes.length == 4,'heart5': nowPlaying.likes && nowPlaying.likes.length > 4}" color="red">favorite </v-icon><span> by </span><span  v-for="(l, index2) in nowPlaying.likes" v-bind:key=(index2)>{{l.name}}{{index2 == nowPlaying.likes.length-1 ? '' : ', '}}</span></div>
                   </v-flex>
                   
                 </v-layout>
@@ -115,19 +115,19 @@
                 <v-tooltip top v-if="!i.likes || !i.likes.find(x=>x.id== user.id)"> 
                   <span>Like</span>
                   <v-btn @click="addLike(i)" slot="activator" flat icon style="margin:0px">
-                  <v-icon >favorite_outline</v-icon><span v-if="i.likes && i.likes.length > 0">{{i.likes.length}}</span>
+                  <v-icon style="opacity: .3" >favorite_outline</v-icon><span v-if="i.likes && i.likes.length > 0">{{i.likes.length}}</span>
                   </v-btn>
                 </v-tooltip>
                 <v-tooltip top v-if="i.likes && i.likes.find(x=>x.id== user.id)"> 
                   <span>Un-Like</span>
                   <v-btn @click="addLike(i)" slot="activator" flat icon style="margin:0px">
-                  <v-icon color="red">favorite</v-icon><span v-if="i.likes && i.likes.length > 0">{{i.likes.length}}</span>
+                  <v-icon color="red" v-bind:class="{'heart': i.likes && i.likes.length == 0,'heart1': i.likes && i.likes.length == 1,'heart2': i.likes && i.likes.length == 2,'heart3': i.likes && i.likes.length == 3,'heart4': i.likes && i.likes.length == 4,'heart5': i.likes && i.likes.length > 4}">favorite</v-icon><span v-if="i.likes && i.likes.length > 0">{{i.likes.length}}</span>
                   </v-btn>
                 </v-tooltip>
               </v-list-tile>
               <div v-if="i.expanded" style="padding-right: 5px; padding-left: 5px;" v-bind:key="i.nid + 'extra'" v-bind:style="{'background-color': (i.user ? i.user.color : ''),'border-bottom': '2px solid rgba(0,0,0,.1)'}">
                 <div style="text-align: center">Added by {{i.user ? i.user.name : 'the server'}}</div>
-                <div style="text-align: center" v-if="i.likes && i.likes.length > 0"><v-icon color="red">favorite </v-icon><span> by </span><span  v-for="(l, index2) in i.likes" v-bind:key=(index2)>{{l.name}}{{index2 == i.likes.length-1 ? '' : ', '}}</span></div>
+                <div style="text-align: center" v-if="i.likes && i.likes.length > 0"><v-icon style="opacity: .5" color="red">favorite </v-icon><span> by </span><span  v-for="(l, index2) in i.likes" v-bind:key=(index2)>{{l.name}}{{index2 == i.likes.length-1 ? '' : ', '}}</span></div>
               </div>
             </template>
           </v-list>
@@ -161,6 +161,35 @@
   }
   .controls{
     padding: 8px;
+  }
+  .heart{
+    animation: pulse 1.2s infinite;
+  }
+  .heart1{
+    animation: pulse 1s infinite;
+  }
+  .heart2{
+    animation: pulse .8s infinite;
+  }
+  .heart3{
+    animation: pulse .7s infinite;
+  }
+  .heart4{
+    animation: pulse .6s infinite;
+  }
+  .heart5{
+    animation: pulse .5s infinite;
+  }
+  @keyframes pulse {
+    0% {
+      opacity: 1
+    }
+    85% {
+      opacity: .5
+    }
+    100% {
+      opacity: 1
+    }
   }
 </style>
 <script>
