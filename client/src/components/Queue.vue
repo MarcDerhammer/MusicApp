@@ -1,5 +1,5 @@
 <template>
-  <v-container fluid>
+  <v-container fluid style="padding: 0px">
     <v-slide-y-transition mode="out-in">
       <v-layout column align-center>
         <v-flex style="width: 500px" v-if="nowPlaying" xs12>
@@ -38,6 +38,31 @@
                   </v-flex>
                   <!--<v-icon style="font-size: 12px" @click="downvote(nowPlaying)" class="vote">thumb_up</v-icon>-->
                 </v-layout>
+                <v-layout row >
+                  <v-flex flex="100" align-center style="text-align: center; display: inline block;" >
+                <v-tooltip top v-if="!nowPlaying.likes || !nowPlaying.likes.find(x=>x.id== user.id)"> 
+                  <span>Like</span>
+                  <v-btn @click="addLike(nowPlaying)" slot="activator" flat icon style="margin:0px">
+                  <v-icon >favorite_outline</v-icon><span v-if="nowPlaying.likes && nowPlaying.likes.length > 0">{{nowPlaying.likes.length}}</span>
+                  </v-btn>
+                </v-tooltip>
+                <v-tooltip top v-if="nowPlaying.likes && nowPlaying.likes.find(x=>x.id== user.id)"> 
+                  <span>Un-Like</span>
+                  <v-btn @click="addLike(nowPlaying)" slot="activator" flat icon style="margin:0px">
+                  <v-icon color="red">favorite</v-icon><span v-if="nowPlaying.likes && nowPlaying.likes.length > 0">{{nowPlaying.likes.length}}</span>
+                  </v-btn>
+                </v-tooltip>
+                </v-flex>
+                
+                </v-layout>
+
+                <v-layout row>
+                  <v-flex flex="100" align-center style="text-align: center; display: inline block;">
+                <div style="text-align: center" v-if="nowPlaying.likes && nowPlaying.likes.length > 0"><v-icon color="red">favorite </v-icon><span> by </span><span  v-for="(l, index2) in nowPlaying.likes" v-bind:key=(index2)>{{l.name}}{{index2 == nowPlaying.likes.length-1 ? '' : ', '}}</span></div>
+                  </v-flex>
+                  
+                </v-layout>
+
                 <v-layout style="opacity: .5" row fill-height>
                       <span style="margin-top: auto">{{timeIn}}</span>
                       <v-spacer flex v-if="!listening"></v-spacer>
@@ -46,6 +71,7 @@
                         <v-icon @click='mute()' v-if="listening && volume !== 0" style="margin-right: 25px;cursor:pointer; margin-left: 30px">volume_up</v-icon>
                         <v-slider v-if="listening" @input='updateVolume()' v-model="volume" step="0" style="cursor:pointer; padding-top: 0px; margin-right: 30px; height: 14px"></v-slider>
                       </v-layout>
+                
                       <span style="margin-top: auto" >-{{timeRemaining}}</span>
                 </v-layout>
             </v-container>
@@ -54,8 +80,8 @@
         </v-flex>
         <v-flex style="width: 500px" xs12 >
           <v-list two-line style="max-width: 500px; ">
-            <template v-if="index !== 0" style="max-width: 500px" v-for="(i, index) in queue">
-              <v-list-tile v-bind:style="{'background-color': (i.user ? i.user.color : '')}" avatar v-bind:key="i.nid" >
+            <template  v-if="index !== 0" style="max-width: 500px;" v-for="(i, index) in queue">
+              <v-list-tile @click="expand(i)" v-bind:style="{'background-color': (i.user ? i.user.color : ''),'border-bottom': (i.expanded ? '': '2px solid rgba(0,0,0,.1)')}" avatar v-bind:key="i.nid" >
                 <v-list-tile-avatar>
                   <img v-bind:src="i.albumArtRef[0].url">
                 </v-list-tile-avatar>
@@ -67,34 +93,45 @@
                 <v-progress-circular indeterminate color="primary" v-if="!i.downloaded"></v-progress-circular>
                 <span v-if="i.score > 0" style="color:green; opacity: .75">&nbsp;+{{i.score}}&nbsp;</span>
                 <span v-if="i.score < 0" style="color:red; opacity: .75">&nbsp;{{i.score}}&nbsp;</span>
-                <v-tooltip top v-if="i.contentType==='1'"> 
-                  <span>Explicit</span>
-                  <v-btn disabled slot="activator" flat icon>
-                    <v-icon >explicit</v-icon>
-                  </v-btn>
-                </v-tooltip>
+                
                 <v-tooltip top  v-if="master || (i.user && i.user.id === user.id)"> 
                   <span>Remove from Queue</span>
-                  <v-btn slot="activator" flat icon>
+                  <v-btn slot="activator" flat icon style="margin:0px">
                     <v-icon @click="remove(i)" class="vote">delete</v-icon>
                   </v-btn>
                 </v-tooltip>
                 <v-tooltip top  v-if="i.botAdd"> 
                   <span>Added by bot</span>
-                  <v-btn disabled slot="activator" flat icon>
+                  <v-btn disabled slot="activator" flat icon style="margin:0px">
                   <v-icon >storage</v-icon>
                   </v-btn>
                 </v-tooltip>
                 <v-tooltip top  v-if="!i.botAdd && i.user && i.user.name"> 
                   <span>Added by {{i.user.name}}</span>
-                  <v-btn disabled slot="activator" flat icon>
-                  <v-icon>person </v-icon>
+                  <v-btn disabled slot="activator" flat icon style="margin:0px">
+                  <v-icon>person</v-icon>
                   </v-btn>
                   </v-tooltip>
+                <v-tooltip top v-if="!i.likes || !i.likes.find(x=>x.id== user.id)"> 
+                  <span>Like</span>
+                  <v-btn @click="addLike(i)" slot="activator" flat icon style="margin:0px">
+                  <v-icon >favorite_outline</v-icon><span v-if="i.likes && i.likes.length > 0">{{i.likes.length}}</span>
+                  </v-btn>
+                </v-tooltip>
+                <v-tooltip top v-if="i.likes && i.likes.find(x=>x.id== user.id)"> 
+                  <span>Un-Like</span>
+                  <v-btn @click="addLike(i)" slot="activator" flat icon style="margin:0px">
+                  <v-icon color="red">favorite</v-icon><span v-if="i.likes && i.likes.length > 0">{{i.likes.length}}</span>
+                  </v-btn>
+                </v-tooltip>
               </v-list-tile>
+              <div v-if="i.expanded" style="padding-right: 5px; padding-left: 5px;" v-bind:key="i.nid + 'extra'" v-bind:style="{'background-color': (i.user ? i.user.color : ''),'border-bottom': '2px solid rgba(0,0,0,.1)'}">
+                <div style="text-align: center">Added by {{i.user ? i.user.name : 'the server'}}</div>
+                <div style="text-align: center" v-if="i.likes && i.likes.length > 0"><v-icon color="red">favorite </v-icon><span> by </span><span  v-for="(l, index2) in i.likes" v-bind:key=(index2)>{{l.name}}{{index2 == i.likes.length-1 ? '' : ', '}}</span></div>
+              </div>
             </template>
           </v-list>
-        <span v-if="aa" style="font-weight: lighter; font-size: 16px; display:block; text-align:center; margin-top: 35px">Auto-adding from {{aa}}.  Search for a new artist or radio station to change!</span>
+        <span v-if="aa" style="font-weight: lighter; font-size: 16px; display:block; text-align:center; margin-top: 35px; margin-left: 10px; margin-right: 10px; margin-bottom: 15px;">Auto-adding from {{aa}}.  Search for a new artist or radio station to change!</span>
         </v-flex>
       </v-layout>
     </v-slide-y-transition>
@@ -170,9 +207,20 @@
         this.noSleep = new NoSleep();
     },
     methods: {
+      expand(song){
+        song.expanded = !song.expanded;
+      },
       onlyMasterCan(rest){
         this.snackText = "Only the Master audio controller can " + rest;
         this.snackbar = true;
+      },
+      addLike(song){
+        this.expand(song);
+        var payload = {
+          user: this.user,
+          storeId: song.storeId
+        };
+        this.$socket.emit('addLike', payload);
       },
       remove(song){
         if(!this.master && (song.user && song.user.id != this.user.id))
@@ -252,6 +300,13 @@
         this.songProg = data.percentage;
         this.listeners = data.count;
         this.aa = data.aa;
+      },
+      likes: function(data){
+        this.queue.forEach(function(element){
+          if(element.storeId == data.storeId){
+            element.likes = data.likes;
+          }
+        });
       },
       userOnly: function(data){
         console.log('ok');

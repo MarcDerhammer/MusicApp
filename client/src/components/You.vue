@@ -1,7 +1,7 @@
 <template>
-  <v-container fluid>
+  <v-container fluid style="padding: 0px">
     <v-slide-y-transition mode="out-in">
-      <v-layout column align-center>
+      <v-layout column align-center style="margin-top: 15px">
         <span>You are:</span>
           <v-flex xs12 sm5 >
             <!--todo.. fix the first keypress issue thing..-->

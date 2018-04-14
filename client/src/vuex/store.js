@@ -21,6 +21,15 @@ const store = new Vuex.Store({
       state.searchResults = songs;
     },
     UPDATESONGQUEUE(state, queue){
+      var wasExpanded = [];
+      state.songQueue.forEach(function(obj){
+        if(obj.expanded){
+          wasExpanded.push(obj.storeId);
+        }
+      });
+      wasExpanded.forEach(function(obj){
+        queue.find(x=>x.storeId== obj).expanded = true;
+      });
       state.songQueue = queue;
     },
     UPDATEUSERINFO(state, userinfo){

@@ -584,6 +584,27 @@ io.on('connection', function(socket){
     syncUpUserInfo(msg);
     io.emit('userOnly', msg);
   });
+
+  socket.on('addLike', function(msg){
+    songQueue.forEach(function(obj){
+      if(obj.storeId === msg.storeId){
+        if(!obj.likes){
+          obj.likes = [];
+        }
+        for(var i = 0; i < obj.likes.length; i++){
+          var like = obj.likes[i];
+          if(like.id == msg.user.id){
+            obj.likes.splice(i, 1);
+            io.emit('likes', obj);
+            return;
+          }
+        }
+        obj.likes.push(msg.user);
+        io.emit('likes', obj);
+        return;
+      }
+    });
+  });
 });
 
 server.listen(3001, function(){
