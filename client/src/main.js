@@ -11,6 +11,7 @@ import VueSocketio from 'vue-socket.io'
 
 Vue.use(Vuetify)
 Vue.use(VueSocketio, "https://marcderhammer.com:3001");
+Vue.use(require('vue-moment'));
 Vue.config.productionTip = false
 
 if(!!window.navigator.userAgent.match(/MSIE|Trident/)){
@@ -31,7 +32,21 @@ var vm = new Vue({
     },
     songQueue: function(val){
       store.commit('UPDATESONGQUEUE', val);
+    },
+    newChat: function(val){
+      store.commit('ADDCHAT', val)
+    },
+    allChats: function(val){
+      store.commit('UPDATECHATS', val);
+    },
+    userOnly: function(data){
+      store.commit('UPDATEUSERINFO', data);
+    },
+    likes: function(data){
+      store.commit('UPDATELIKES', data);
     }
+
+
   },
   methods:{
   }

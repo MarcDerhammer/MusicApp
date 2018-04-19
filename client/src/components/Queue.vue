@@ -323,22 +323,14 @@
     },
     sockets: {
       songProg: function(data){
-        console.log()
         this.timeRemaining = this.millisToNorm(this.nowPlaying.durationMillis - data.seconds *1000);
         this.timeIn = this.millisToNorm(data.seconds *1000);
         this.songProg = data.percentage;
         this.listeners = data.count;
         this.aa = data.aa;
-      },
-      likes: function(data){
-        this.queue.forEach(function(element){
-          if(element.storeId == data.storeId){
-            element.likes = data.likes;
-          }
-        });
-      },
-      userOnly: function(data){
-        console.log('ok');
+      }
+      
+      /*userOnly: function(data){
         this.queue.forEach(function(element){
           if(element.user && element.user.id == data.id){
             element.user = data;
@@ -351,7 +343,7 @@
             });
           }
         });
-      }
+      }*/
     },
     watch: {
       listening: function(val){

@@ -11,7 +11,8 @@ const store = new Vuex.Store({
     user: {},
     listening: false,
     volume: 50,
-    master: false
+    master: false,
+    chats: []
   },
   mutations: {
     CHANGE(state, text){
@@ -41,16 +42,37 @@ const store = new Vuex.Store({
         if(obj.user && obj.user.id == userinfo.id){
           obj.user = userinfo;
         }
+        if(obj.likes){
+          obj.likes.forEach(function(obj2){
+            if(obj2.id == userinfo.id){
+              obj2.name = userinfo.name;
+            }
+          });
+        }
+      });
+      state.chats.forEach(function(obj){
+        if(obj.user && obj.user.id == userinfo.id){
+          obj.user = userinfo;
+        }
       });
     },
-    UPDATEUSER(state, user){
+    UPDATECURRENTUSER(state, user){
       localStorage.setItem('user', JSON.stringify(user));
       state.user = user;
-      console.log('Updated user to ' + user.name + " : " + user.id);
     },
-    /*CHANGEUSER(state, name){
-      state.userName = name;
-    },*/
+    UPDATECHATS(state, chats){
+      state.chats = chats;
+    },
+    ADDCHAT(state, chat){
+      state.chats.push(chat);
+    },
+    UPDATELIKES(state, data){
+      state.songQueue.forEach(function(element){
+        if(element.storeId == data.storeId){
+          element.likes = data.likes;
+        }
+      });
+    },
     JOINAUDIO(state, val){
       state.listening = true;
     },

@@ -14,13 +14,13 @@
         <span>Queue</span>
         <v-icon>queue_music</v-icon>
       </v-btn>
-      <!--<v-btn flat color="blue" value="Chat" href="#/chat">
-        <span>Chat</span>
-        <v-icon>chat</v-icon>
-      </v-btn>-->
       <v-btn flat color="blue" value="Search" href="#/search">
         <span>Search Music</span>
         <v-icon>search</v-icon>
+      </v-btn>
+      <v-btn flat color="blue" value="Chat" href="#/chat">
+        <span>Chat</span>
+        <v-icon>chat</v-icon>
       </v-btn>
       <v-btn flat color="blue" value="You" href="#/you">
         <span v-if="user.name.includes('Anonymous')">Change Name</span>
@@ -64,7 +64,7 @@
       user.name = "Anonymous" + Math.floor(Math.random() * 1000);
       user.id = Math.floor(Math.random() * 1000000000);
     }
-    store.commit('UPDATEUSER', user);
+    store.commit('UPDATECURRENTUSER', user);
   }
 
   window.EventBus = new Vue();

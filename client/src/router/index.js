@@ -3,8 +3,11 @@ import Router from 'vue-router'
 import Queue from '@/components/Queue'
 import Search from '@/components/Search'
 import You from '@/components/You'
+import Chat from '@/components/Chat'
+import VueChatScroll from 'vue-chat-scroll';
 
 Vue.use(Router)
+Vue.use(VueChatScroll)
 
 export default new Router({
   routes: [
@@ -21,6 +24,10 @@ export default new Router({
     { path: '/you',
       name: 'You',
       component: You
+    },
+    { path: '/chat',
+      name: 'Chat',
+      component: Chat
     }
   ]
 })

@@ -9,11 +9,36 @@ function tsLog(text){
   console.log(ts + text);
 }
 
+writeChatToFile = function(){
+  fs.writeFileSync('/usr/share/nginx/html/chats.json', JSON.stringify(chats), 'utf8');
+}
+
 writeQueueToFile = function(){
   fs.writeFileSync('/usr/share/nginx/html/queue.json', JSON.stringify(songQueue), 'utf8');
   fs.writeFileSync('/usr/share/nginx/html/queueAA.json', JSON.stringify(aaSongs), 'utf8');
   fs.writeFileSync('/usr/share/nginx/html/AASettings.json', JSON.stringify(aaStation), 'utf8');
+  fs.writeFileSync('/usr/share/nginx/html/chats.json', JSON.stringify(chats), 'utf8');
 }
+
+playNextSong = function(){
+  io.emit('playNextSong', 'yea');
+  var chat = {
+    user: {
+      id: -1,
+      name: 'Server',
+      color: 'rgba(0,0,0,.4)'
+    },
+    message: 'Now playing: ' + songQueue[0].title + ' - ' + songQueue[0].artist + (songQueue[0].user && songQueue[0].user.name ? ' (Added by ' + songQueue[0].user.name + ')' : '')
+  }
+  addChat(chat); 
+} 
+
+addChat = function(chat){
+  chat.date = new Date().getTime();
+  chats.push(chat);
+  io.emit('newChat', chat);
+  writeChatToFile();
+} 
 
 readFromFile = function(){
   tsLog('attempting read');
@@ -39,6 +64,13 @@ readFromFile = function(){
       aaStation = JSON.parse(data);
     }
   });
+  fs.readFile('/usr/share/nginx/html/chats.json', 'utf8', function readFile(err, data){
+    if(err){
+      tsLog(err);
+    }else{
+      chats = JSON.parse(data);
+    }
+  });
 }
 
 syncUpUserInfo = function(user){
@@ -52,6 +84,11 @@ syncUpUserInfo = function(user){
           like.name = user.name;
         }
       });
+    }
+  });
+  chats.forEach(function(obj){
+    if(obj.user && obj.user.id == user.id){
+      obj.user = user;
     }
   });
 }
@@ -99,15 +136,15 @@ downloadInOrder = function(){
                 if(theSong.user && theSong.user.id && theSong.downloaded && song.user && song.user.id && theSong.user.id == song.user.id){
                     myLastQueue = i;                   
                 }
-              }
+              } 
               //console.log(song.user.id + ' last queue was ' + myLastQueue);
               to = myLastQueue;
               var usersWhoQueued = [];
               for(var i = myLastQueue; i < songQueue.length; i++){
-                var theSong = songQueue[i];
-                if(!theSong.user){
+                var theSong = songQueue[i];  
+                if(!theSong.user){ 
                   if(to > 0)
-                    to = i-1;
+                    to = i-1; 
                   i = songQueue.length;
                 }
                 if(theSong.user && theSong.user.id && theSong.downloaded){
@@ -146,7 +183,7 @@ downloadInOrder = function(){
                 downloadInProgress = false;
                 io.emit('songQueue', songQueue);
                 if(i ==0){
-                  io.emit('playNextSong', 'yea');
+                  playNextSong();
                 }
                 downloadInOrder();
                 break;
@@ -174,6 +211,7 @@ var io = require('socket.io')(server);
 
 var users = [];
 var songQueue = [];
+var chats = [];
 var aaStation = {};
 var aaSongs = [];
 readFromFile();
@@ -307,7 +345,7 @@ io.on('connection', function(socket){
           writeQueueToFile();
           io.emit('songQueue', songQueue);
           if(i ==0){
-            io.emit('playNextSong', 'yea');
+            playNextSong();
           }
           break;
         }
@@ -370,39 +408,10 @@ io.on('connection', function(socket){
   });
 
   socket.emit('songQueue', songQueue);
+  socket.emit('allChats', chats);
 
   socket.on('getSongQueue', function(msg){
     socket.emit('songQueue', songQueue);
-  });
-
-  socket.on('upvote', function(song){
-	return;
-    songQueue.forEach(function(obj){
-      if(obj.storeId === song.storeId){
-        if(!obj.score){
-          obj.score = 0;
-        }
-        obj.score++;
-        return;
-      }
-      io.emit('songQueue', songQueue);
-  //    writeQueueToFile();
-    })
-  });
-
-  socket.on('downvote', function(song){
-	return;
-    songQueue.forEach(function(obj){
-      if(obj.storeId === song.storeId){
-        if(!obj.score){
-          obj.score = 0;
-        }
-        obj.score--;
-        return;
-      }
-      io.emit('songQueue', songQueue);
-//      writeQueueToFile();
-    })
   });
 
   socket.on('songProgUpdate', function(msg){
@@ -478,6 +487,17 @@ io.on('connection', function(socket){
       socket.emit('queueSuccess', msg.storeId);
       socket.emit('toastMessage', 'Song Queued!');
       io.emit('songQueue', songQueue);
+      if(msg.user && msg.user.name){
+        var chat = {
+          user: {
+            id: -1,
+            name: 'Server',
+            color: 'rgba(0,0,0,.4)'
+          },
+          message: msg.user.name + ' added ' + msg.title + ' - ' + msg.artist
+        }
+        //addChat(chat); 
+      }
       writeQueueToFile();
       downloadInOrder();
     }else{
@@ -578,7 +598,7 @@ io.on('connection', function(socket){
       songQueue.shift();
       botAddSongToQueue();
       io.emit('songQueue', songQueue);
-      io.emit('playNextSong', 'yea');
+      playNextSong();
       writeQueueToFile();
     }
   });
@@ -612,7 +632,12 @@ io.on('connection', function(socket){
       }
     });
   });
+
+  socket.on('addChat', function(msg){
+    addChat(msg);
+  });
 });
+
 
 server.listen(3001, function(){
   tsLog('listening on *:3001');

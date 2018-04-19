@@ -4,7 +4,6 @@
       <v-layout column align-center style="margin-top: 15px">
         <span>You are:</span>
           <v-flex xs12 sm5 >
-            <!--todo.. fix the first keypress issue thing..-->
           <v-text-field 
             required
             maxlength="30"
@@ -88,9 +87,8 @@ export default {
       if(this.user.color && this.user.color.includes("#")){
         this.user.color = this.hexToRgbA(this.user.color);
       }
-      if (this.user.name) store.commit("UPDATEUSER", this.user);
+      if (this.user.name) store.commit("UPDATECURRENTUSER", this.user);
       this.$socket.emit("userInfoChanged", this.user);
-      store.commit('UPDATEUSERINFO', this.user);
     }
   },
   sockets: {
