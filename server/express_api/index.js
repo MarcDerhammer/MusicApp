@@ -1,9 +1,23 @@
 // Include the server in your file
 const server = require('server');
+const { header } = server.reply;
+
+var secrets = require('./secrets');
+
+
+
+
+const cors = [
+    /*ctx => header("Access-Control-Allow-Origin", "*"),*/
+    ctx => header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept"),
+    ctx => ctx.method.toLowerCase() === 'options' ? 200 : false
+  ];
+
 var io = require('socket.io-client');
 var socket = io.connect('https://marcderhammer.com:3001', {reconnect: true});
 
 var pm = require('./play');
+var lyrics = require('./lyrics');
 const { get, post } = server.router;
 const { render } = server.reply;
 
@@ -58,6 +72,7 @@ socket.on('connect', function(socket){
 
 const downloadStream = get('/downloadStream/:id', async ctx => {
     for(var i = 0; i < 5; i++){
+        console.log('attempting to dl ' + i+1);
         var id = await pm.downloadSong(ctx.params.id);
         if(id){
             return id;
@@ -73,12 +88,31 @@ const downloadStream = get('/downloadStream/:id', async ctx => {
     return 'No results';
 });
 
+const lyricsGet = get('/lyrics/:songartist', async ctx =>{
+    try{
+        var lyr = await lyrics.lyrics(ctx.params.songartist);
+        ctx.header("Content-Type", "application/json");
+        var res = {
+            lyrics: lyr
+        }
+        return res;
+    }catch(err){
+        var res = {
+            error: err
+        }
+        return res;
+    }
+});
+
 server(
+    { security: { csrf: false } },
   getSearch,
   getArtist,
   getAlbum,
   getStreamUrl,
   downloadStream,
   getStation,
-  createStation
+  createStation,
+  cors,
+  lyricsGet
 );

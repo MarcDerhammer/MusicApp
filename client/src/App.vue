@@ -18,8 +18,8 @@
         <span>Search Music</span>
         <v-icon>search</v-icon>
       </v-btn>
-      <v-btn flat color="blue" value="Chat" href="#/chat">
-        <span>Chat</span>
+      <v-btn flat color="blue" value="Chat" href="#/chat" v-bind:class="{'notify' : unreadChats > 0}">
+        <span>Chat<span v-if="unreadChats > 0"> ({{unreadChats}})</span></span>
         <v-icon>chat</v-icon>
       </v-btn>
       <v-btn flat color="blue" value="You" href="#/you">
@@ -41,6 +41,22 @@
     
   </v-app>
 </template>
+<style>
+.notify{
+    animation: updown 1.5s infinite;
+}
+
+  @keyframes updown{
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: .3;
+    }
+  }
+
+
+</style>
 
 <script>
   import SearchBar from './components/SearchBar'
@@ -85,6 +101,9 @@
     computed: {
       listening(){
         return store.state.listening;
+      },
+      unreadChats(){
+        return store.state.unreadChats;
       },
       user(){
         return store.state.user;

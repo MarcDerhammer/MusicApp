@@ -41,6 +41,9 @@
             </template>
           </v-list>
 </v-flex>
+<v-flex style="width: 500px" xs12>
+  <span>v0.11</span>
+</v-flex>
       </v-layout>
     </v-slide-y-transition>
   </v-container>

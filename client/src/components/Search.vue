@@ -415,6 +415,7 @@
                 obj.user = user;
                 socket.emit('addSongToQueue', obj);
             });
+            this.albumDialog = false;
           }
         }
       }

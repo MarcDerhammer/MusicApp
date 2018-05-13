@@ -7,60 +7,86 @@
             <v-container style="padding-bottom: 6px; padding-top: 6px">
               <v-layout style="margin-bottom: 8px;" row>
                 <v-flex flex align-center style="text-align:center">
-                  <span v-if="!listening" style="font-weight: lighter; font-size: 10px;">Press the play button to join audio stream</span>
                   <span v-if="!master && listening" style="font-weight: lighter; font-size: 10px;">Listening is synced with another source</span>
                   <span v-if="master" style="font-weight: lighter; font-size: 10px;">You are the audio master and have full control</span>
-                  <span v-if="listening && listeners == 2" style="font-weight: lighter; font-size: 10px; display:block">There is {{listeners-1}} other device listening to the stream</span>
-                  <span v-if="listening && listeners > 2" style="font-weight: lighter; font-size: 10px; display:block">There are {{listeners-1}} other devices listening to the stream</span>
                 </v-flex>
               </v-layout>
                 <v-layout row>
-                <v-flex xs12 align-center style="text-align:center">
+                <v-flex v-show="!showLyric" xs12 align-center style="text-align:center" @click="showLyrics()">
                   <img flex style="max-width: 300px;" :src="nowPlaying.albumArtRef[0].url" width="100%"/>
+                </v-flex>
+                <v-flex v-show="showLyric" xs12 align-center style="text-align:center; height: 300px; overflow-y: scroll; width:100%">
+                  <v-btn v-if="!loadingLyrics" color="primary" @click="showLyrics()" flat style="text-align: center">Hide</v-btn>
+                  <pre style="white-space: pre-wrap; overflow: y: scroll; text-align: left; width:100%" v-html="lyrics"></pre>
+                  <v-progress-circular style="text-align:center; width 100%; height: 100%; margin-auto;" indeterminate color="primary" v-if="loadingLyrics"></v-progress-circular>
+                  <v-btn v-if="!loadingLyrics" color="primary" @click="showLyrics()" flat style="text-align: center">Hide</v-btn>
                 </v-flex>
                 </v-layout>
                 <v-layout flex row>
                   <v-flex flex align-center style="max-height: 175px; overflow: hidden; text-overflow: ellipsis; text-align: center">
                     <h3>{{nowPlaying.title}}</h3>
                     <h4 style="font-weight: lighter">{{nowPlaying.artist}}</h4>
-                    <h4 style="font-weight: lighter; opacity: .8">{{nowPlaying.album}} ({{nowPlaying.year}})<v-icon v-if="nowPlaying.contentType==='1'">explicit</v-icon></h4>
-                    <h6 v-if="nowPlaying.user && nowPlaying.user.name" style="opacity: .5; font-weight: lighter">Queued by {{nowPlaying.user.name}}</h6>
-                    <h6 v-if="nowPlaying.botAdd" style="opacity: .5; font-weight: lighter">Auto-added by the server</h6>
+                    <!--<h4 style="font-weight: lighter; opacity: .8">{{nowPlaying.album}} ({{nowPlaying.year}})<v-icon v-if="nowPlaying.contentType==='1'">explicit</v-icon></h4>-->
                   </v-flex>
-                </v-layout>
-                <v-layout row>
-                <!--  <v-icon style="font-size: 12px" @click="downvote(nowPlaying)" class="vote">thumb_down</v-icon>-->
-                  <v-flex flex="100" align-center style="text-align: center; display: inline block;">
-                        <v-icon @click="previous()" class="vote controls">skip_previous</v-icon>
-                        <v-icon v-if="!listening" @click="joinAudio()" class="vote controls">play_arrow</v-icon>
-                        <v-icon v-if="listening" @click="leaveAudio()" class="vote controls">pause</v-icon>
-                        <v-icon @click="remove(nowPlaying)" class="vote controls">skip_next</v-icon>
-                  </v-flex>
-                  <!--<v-icon style="font-size: 12px" @click="downvote(nowPlaying)" class="vote">thumb_up</v-icon>-->
                 </v-layout>
                 <v-layout row >
                   <v-flex flex="100" align-center style="text-align: center; display: inline block;" >
+
+                  <v-tooltip top v-if="listening && master"> 
+                    <span>Skip</span>
+                    <v-btn @click="previous()" slot="activator" flat icon style="margin:0px">
+                    <v-icon style="opacity: .3;" >skip_previous</v-icon>
+                    </v-btn>
+                  </v-tooltip>
+                  <span v-if="listening && master">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+
+                  <v-tooltip top v-if="!listening"> 
+                  <span>Listen</span>
+                  <v-btn @click="joinAudio()" slot="activator" flat icon style="margin:0px">
+                  <v-icon style="opacity: .3" >speaker</v-icon><span v-if="listeners > 0">{{listeners}}</span>
+                  </v-btn>
+                  </v-tooltip>
+                  <v-tooltip top v-if="listening"> 
+                  <span>Stop Listening</span>
+                  <v-btn @click="leaveAudio()" slot="activator" flat icon style="margin:0px">
+                  <v-icon class="dance" style="opacity: .8">speaker</v-icon><span v-if="listeners > 0">{{listeners}}</span>
+                  </v-btn>
+                  </v-tooltip>
+                  <span>&nbsp;&nbsp;&nbsp;</span>
+                  
                 <v-tooltip top v-if="!nowPlaying.likes || !nowPlaying.likes.find(x=>x.id== user.id)"> 
                   <span>Like</span>
                   <v-btn @click="addLike(nowPlaying)" slot="activator" flat icon style="margin:0px">
                   <v-icon style="opacity: .3" >favorite_outline</v-icon><span v-if="nowPlaying.likes && nowPlaying.likes.length > 0">{{nowPlaying.likes.length}}</span>
                   </v-btn>
                 </v-tooltip>
-                <!--<v-tooltip top v-if="nowPlaying.likes && nowPlaying.likes.find(x=>x.id== user.id)"> 
+                <v-tooltip top v-if="nowPlaying.likes && nowPlaying.likes.find(x=>x.id== user.id)"> 
                   <span>Un-Like</span>
                   <v-btn @click="addLike(nowPlaying)" slot="activator" flat icon style="margin:0px">
-                  <v-icon color="red" class="heart">favorite</v-icon><span v-if="nowPlaying.likes && nowPlaying.likes.length > 0">{{nowPlaying.likes.length}}</span>
+                  <v-icon style="opacity: .8; color:red" >favorite</v-icon><span v-if="nowPlaying.likes && nowPlaying.likes.length > 0">{{nowPlaying.likes.length}}</span>
                   </v-btn>
-                </v-tooltip>-->
-                </v-flex>
-                
-                </v-layout>
+                </v-tooltip>
 
+                <span v-if="listening && master || (nowPlaying.user && nowPlaying.user.id === user.id)">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                <v-tooltip top v-if="listening && master || (nowPlaying.user && nowPlaying.user.id === user.id)"> 
+                  <span>Skip</span>
+                  <v-btn @click="remove(nowPlaying)" slot="activator" flat icon style="margin:0px">
+                  <v-icon style="opacity: .3;" >skip_next</v-icon>
+                  </v-btn>
+                </v-tooltip>
+                </v-flex>
+                </v-layout>
                 <v-layout row>
                   <v-flex flex="100" align-center style="text-align: center; display: inline block;">
                 <div style="text-align: center" v-if="nowPlaying.likes && nowPlaying.likes.length > 0"><v-icon @click="addLike(nowPlaying)" v-bind:class="{'heart': nowPlaying.likes && nowPlaying.likes.length == 0,'heart1': nowPlaying.likes && nowPlaying.likes.length == 1,'heart2': nowPlaying.likes && nowPlaying.likes.length == 2,'heart3': nowPlaying.likes && nowPlaying.likes.length == 3,'heart4': nowPlaying.likes && nowPlaying.likes.length == 4,'heart5': nowPlaying.likes && nowPlaying.likes.length > 4}" color="red">favorite </v-icon><span> by </span><span  v-for="(l, index2) in nowPlaying.likes" v-bind:key=(index2)>{{l.name}}{{index2 == nowPlaying.likes.length-1 ? '' : ', '}}</span></div>
                   </v-flex>
-                  
+                </v-layout>
+
+                <v-layout row>
+                  <v-flex flex="100" align-center style="text-align: center;">
+                    <h3 v-if="nowPlaying.user && nowPlaying.user.name" style="opacity: .8; font-weight: lighter">Added by <b style="font-weight: bold">{{nowPlaying.user.name}}</b></h3>
+                    <h6 v-if="nowPlaying.botAdd" style="opacity: .5; font-weight: lighter">Auto-added by the server</h6>
+                  </v-flex>
                 </v-layout>
 
                 <v-layout style="opacity: .5" row fill-height>
@@ -94,7 +120,7 @@
                 <span v-if="i.score > 0" style="color:green; opacity: .75">&nbsp;+{{i.score}}&nbsp;</span>
                 <span v-if="i.score < 0" style="color:red; opacity: .75">&nbsp;{{i.score}}&nbsp;</span>
                 
-                <v-tooltip top  v-if="master || (i.user && i.user.id === user.id)"> 
+                <v-tooltip top  v-if="i.downloaded && master || (i.user && i.user.id === user.id)"> 
                   <span>Remove from Queue</span>
                   <v-btn slot="activator" flat icon style="margin:0px">
                     <v-icon @click="remove(i)" class="vote">delete</v-icon>
@@ -103,7 +129,7 @@
                 <v-tooltip top  v-if="i.botAdd"> 
                   <span>Added by bot</span>
                   <v-btn disabled slot="activator" flat icon style="margin:0px">
-                  <v-icon >storage</v-icon>
+                  <v-icon >radio</v-icon>
                   </v-btn>
                 </v-tooltip>
                 <v-tooltip top  v-if="!i.botAdd && i.user && i.user.name"> 
@@ -112,13 +138,13 @@
                   <v-icon>person</v-icon>
                   </v-btn>
                   </v-tooltip>
-                <v-tooltip top v-if="!i.likes || !i.likes.find(x=>x.id== user.id)"> 
+                <v-tooltip top v-if="i.downloaded && (!i.likes || !i.likes.find(x=>x.id== user.id))"> 
                   <span>Like</span>
                   <v-btn @click="addLike(i)" slot="activator" flat icon style="margin:0px">
                   <v-icon style="opacity: .3" >favorite_outline</v-icon><span v-if="i.likes && i.likes.length > 0">{{i.likes.length}}</span>
                   </v-btn>
                 </v-tooltip>
-                <v-tooltip top v-if="i.likes && i.likes.find(x=>x.id== user.id)"> 
+                <v-tooltip top v-if="i.downloaded && (i.likes && i.likes.find(x=>x.id== user.id))"> 
                   <span>Un-Like</span>
                   <v-btn @click="addLike(i)" slot="activator" flat icon style="margin:0px">
                   <v-icon color="red" v-bind:class="{'heart': i.likes && i.likes.length == 0,'heart1': i.likes && i.likes.length == 1,'heart2': i.likes && i.likes.length == 2,'heart3': i.likes && i.likes.length == 3,'heart4': i.likes && i.likes.length == 4,'heart5': i.likes && i.likes.length > 4}">favorite</v-icon><span v-if="i.likes && i.likes.length > 0">{{i.likes.length}}</span>
@@ -180,20 +206,32 @@
   .heart5{
     animation: pulse .5s infinite;
   }
+  .dance{
+    opacity: 1;
+  }
   @keyframes pulse {
     0% {
       opacity: 1
     }
     85% {
-      opacity: .5
+      opacity: .2
     }
     100% {
       opacity: 1
     }
   }
+  @keyframes updown{
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: .3;
+    }
+  }
 </style>
 <script>
   import store from '../vuex/store'
+  import axios from 'axios';
   
   export default {
     data () {
@@ -208,7 +246,10 @@
         lastVol: 100,
         timeRemaining: '',
         timeIn: '',
-        noSleep: {}
+        noSleep: {},
+        lyrics: '',
+        showLyric: false,
+        loadingLyrics: false
       }
     },
     computed: {
@@ -259,6 +300,15 @@
           user: this.user.id
         };
         this.$socket.emit('removeFromQueue', payload);
+      },
+      showLyrics(){
+        this.lyrics = '';
+        this.showLyric = !this.showLyric;
+        this.loadingLyrics = true;
+        axios.get('https://marcderhammer.com/api/lyrics/' + this.nowPlaying.title + ' ' + this.nowPlaying.artist).then(response =>{
+          this.lyrics = response.data.lyrics;
+          this.loadingLyrics = false;
+        });
       },
       previous(){
         if(this.master){
@@ -312,7 +362,6 @@
         this.noSleep.disable();
       },
       clickProg(event){
-        //EventBus.$emit('setProgress', event.offsetX/document.getElementById("progBar").offsetWidth);
         var prog = event.offsetX/document.getElementById("progBar").offsetWidth;
         if(this.master){
           this.$socket.emit('masterSetProg', prog);
@@ -329,21 +378,6 @@
         this.listeners = data.count;
         this.aa = data.aa;
       }
-      
-      /*userOnly: function(data){
-        this.queue.forEach(function(element){
-          if(element.user && element.user.id == data.id){
-            element.user = data;
-          }
-          if(element.likes){
-            element.likes.forEach(function(obj){
-              if(obj.id === data.id){
-                obj.name = data.name;
-              }
-            });
-          }
-        });
-      }*/
     },
     watch: {
       listening: function(val){

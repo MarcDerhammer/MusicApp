@@ -12,7 +12,8 @@ const store = new Vuex.Store({
     listening: false,
     volume: 50,
     master: false,
-    chats: []
+    chats: [],
+    unreadChats: 0
   },
   mutations: {
     CHANGE(state, text){
@@ -65,6 +66,12 @@ const store = new Vuex.Store({
     },
     ADDCHAT(state, chat){
       state.chats.push(chat);
+      if(chat.user.id > 0 && state.user.id && chat.user.id != state.user.id){
+        state.unreadChats++;
+      }
+    },
+    MARKCHATSASREAD(state, chat){
+      state.unreadChats = 0;
     },
     UPDATELIKES(state, data){
       state.songQueue.forEach(function(element){

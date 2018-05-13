@@ -3,6 +3,7 @@ var https = require('https');
 var fs = require( 'fs' );
 var downloadInProgress = false;
 var stationCreateAttempts = 0;
+var secrets = require('./secrets');
 
 function tsLog(text){
   var ts = '[' + new Date().toString().substring(0, 24) + '] ';
@@ -31,7 +32,60 @@ playNextSong = function(){
     message: 'Now playing: ' + songQueue[0].title + ' - ' + songQueue[0].artist + (songQueue[0].user && songQueue[0].user.name ? ' (Added by ' + songQueue[0].user.name + ')' : '')
   }
   addChat(chat); 
-} 
+
+  var connection = connect();
+  if(songQueue[0].historyId){
+    connection.query('update history set playTime = utc_timestamp() where idhistory = ' + songQueue[0].historyId + ';'
+        , function(err, res, fields){
+      if(err){
+        console.log(err)
+      }else{
+      };
+    });
+    connection.end();
+  }
+}
+
+var mysql = require('mysql');
+function connect() { 
+    var con = mysql.createConnection({
+        host: 'localhost',
+        user: secrets.mysqluser,
+        password: secrets.mysqlpw,
+        database: 'music'
+    });
+    return con;
+};
+
+addToHistory = function(s){
+  var connection = connect();
+  connection.query('CALL `play_song`(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);',
+      [
+          s.storeId,
+          s.title,
+          s.artist,
+          s.albumId,
+          s.album,
+          s.albumArtist,
+          s.durationMillis,
+          s.albumArtRef[0].url,
+          s.year,
+          s.contentType,
+          null,
+          s.station ? s.station.id : null, 
+          s.station ? s.station.name : null
+      ]
+  , function(err, res, fields){
+    if(err){
+      console.log(err)
+    }else{
+      res = JSON.parse(JSON.stringify(res));
+      console.log(res[0][0]);
+      s.historyId = res[0][0].histid;
+    };
+  });
+  connection.end();
+}
 
 addChat = function(chat){
   chat.date = new Date().getTime();
@@ -169,6 +223,7 @@ downloadInOrder = function(){
 
             song.downloaded = true;
             downloadInProgress = false;
+            addToHistory(song);     
             downloadInOrder();
             writeQueueToFile();
             io.emit('songQueue', songQueue);
@@ -252,6 +307,7 @@ io.on('connection', function(socket){
         var tracks = dat.data.stations[0].tracks;
         tracks.forEach(function(newTrack){
           newTrack.botAdd = true;
+          newTrack.station = aaStation;
           var alreadyExists = false;
           aaSongs.forEach(function(aaSong){
             if(newTrack.storeId === aaSong.storeId){
@@ -408,7 +464,8 @@ io.on('connection', function(socket){
   });
 
   socket.emit('songQueue', songQueue);
-  socket.emit('allChats', chats);
+  var now = new Date().getTime();
+  socket.emit('allChats', chats.filter(x=> now - x.date < 172800000));
 
   socket.on('getSongQueue', function(msg){
     socket.emit('songQueue', songQueue);

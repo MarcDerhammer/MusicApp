@@ -1,7 +1,7 @@
 <template>
   <v-container fluid style="padding: 0px">
     <v-layout column align-center>
-      <v-flex xs12 style="width: 500px; padding: 15px" v-bind:style="{'height': height, 'overflow-y': 'scroll'}" v-chat-scroll="{always: false}">
+      <v-flex xs12 style="width: 500px; padding: 15px" v-bind:style="{'height': height, 'overflow-y': 'scroll'}" class="hoverscroll" v-chat-scroll="{always: false}">
         <div  v-for="(chat, index) in chats" v-bind:key="chat.date" v-show="chat.user.id !== -1 || showBot">
           <div style="margin-top: 10px;" v-bind:style="{'text-align': (chat.user.id === user.id ? 'right' : 'left')}">
           <p 
@@ -65,9 +65,13 @@
     watch: {
     windowHeight(newHeight, oldHeight) {
      
+    },
+    unreadChats(){
+      store.commit('MARKCHATSASREAD', 'YEA');
     }
   },
   mounted() {
+    store.commit('MARKCHATSASREAD', 'YEA');
     this.windowHeight = window.innerHeight
     this.height = this.windowHeight - 140 + 'px';
     let that = this;
@@ -85,6 +89,9 @@
       },
       user(){
         return store.state.user;
+      },
+      unreadChats(){
+        return store.state.unreadChats;
       }
     },
     methods: {
@@ -106,11 +113,10 @@
       }
     },
     sockets: {
-          newChat: function(data){
-            this.dialog3 = true;
-            this.alertMessage = data;
-          }
-          
+      newChat: function(data){
+        this.dialog3 = true;
+        this.alertMessage = data;
+      }
     }
   }
   
